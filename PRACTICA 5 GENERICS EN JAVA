@@ -1,0 +1,681 @@
+ACTIVIDADES
+
+1---------------
+public class InvalidSubscriptException extends RuntimeException {
+    public InvalidSubscriptException(String msg) {
+        super(msg);
+    }
+}
+
+public class PruebaMetodoGenerico {
+ 
+    public static <E> void imprimirArreglo(E[] arreglo) {
+        for (E e : arreglo)
+            System.out.printf("%s ", e);
+        System.out.println();
+    }
+ 
+    public static <E> int imprimirArreglo(E[] arreglo, int inf, int sup) {
+        if (inf < 0 || sup >= arreglo.length || sup <= inf)
+            throw new InvalidSubscriptException("Indices fuera de rango");
+        for (int i = inf; i <= sup; i++)
+            System.out.printf("%s ", arreglo[i]);
+        System.out.println();
+        return sup - inf + 1;
+    }
+ 
+    public static void main(String[] args) {
+        Integer[] enteros = {1, 2, 3, 4, 5, 6};
+        Double[] decimales = {1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7};
+        Character[] letras = {'H', 'O', 'L', 'A'};
+ 
+        imprimirArreglo(enteros);
+        imprimirArreglo(decimales);
+        imprimirArreglo(letras);
+ 
+        System.out.println("Impresos: " + imprimirArreglo(enteros, 1, 3));
+        System.out.println("Impresos: " + imprimirArreglo(decimales, 2, 5));
+        System.out.println("Impresos: " + imprimirArreglo(letras, 0, 2));
+ 
+        try {
+            imprimirArreglo(letras, 2, 8);
+        } catch (InvalidSubscriptException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+}
+
+2------------------------
+public class ExcepcionPilaLlena extends RuntimeException {
+    public ExcepcionPilaLlena(String msg) {
+        super(msg);
+    }
+}
+public class ExcepcionPilaVacia extends RuntimeException {
+    public ExcepcionPilaVacia(String msg) {
+        super(msg);
+    }
+}
+public class Pila<E> {
+    private final int tamanio;
+    private int superior;
+    private E[] elementos;
+ 
+    public Pila() {
+        this(10);
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public Pila(int s) {
+        tamanio = s > 0 ? s : 10;
+        superior = -1;
+        elementos = (E[]) new Object[tamanio];
+    }
+ 
+    public void push(E valor) {
+        if (superior == tamanio - 1)
+            throw new ExcepcionPilaLlena("La pila esta llena, no se puede meter " + valor);
+        elementos[++superior] = valor;
+    }
+ 
+    public E pop() {
+        if (superior == -1)
+            throw new ExcepcionPilaVacia("Pila vacia, no se puede sacar");
+        return elementos[superior--];
+    }
+ 
+    public boolean contains(E elemento) {
+        for (int i = superior; i >= 0; i--)
+            if (elementos[i].equals(elemento))
+                return true;
+        return false;
+    }
+ 
+}
+3-------------------------------------------
+public class IgualGenerico {
+ 
+    public static <T> boolean esIgualA(T a, T b) {
+        return a.equals(b);
+    }
+ 
+    public static void main(String[] args) {
+        Object o = new Object();
+ 
+        System.out.println("int: " + esIgualA(5, 5));
+        System.out.println("double: " + esIgualA(2.5, 3.5));
+        System.out.println("char: " + esIgualA('a', 'a'));
+        System.out.println("Integer: " + esIgualA(Integer.valueOf(10), Integer.valueOf(10)));
+        System.out.println("String: " + esIgualA("hola", "hola"));
+        System.out.println("Object: " + esIgualA(o, o));
+        System.out.println("Object distintos: " + esIgualA(new Object(), new Object()));
+        System.out.println("null: " + esIgualA(null, null));
+    }
+}
+4-------------------------------------------------
+public boolean esIgual(Pila<E> otra) {
+        if (superior != otra.superior)
+            return false;
+        for (int i = 0; i <= superior; i++)
+            if (!elementos[i].equals(otra.elementos[i]))
+                return false;
+        return true;
+    }
+}
+public class PruebaPila {
+    public static void main(String[] args) {
+        Pila<Integer> p1 = new Pila<>(5);
+        Pila<Integer> p2 = new Pila<>(5);
+        Pila<Integer> p3 = new Pila<>(5);
+ 
+        for (int i = 1; i <= 3; i++) {
+            p1.push(i);
+            p2.push(i);
+        }
+        p3.push(3);
+        p3.push(2);
+        p3.push(1);
+ 
+        System.out.println("p1 contiene 2: " + p1.contains(2));
+        System.out.println("p1 contiene 9: " + p1.contains(9));
+        System.out.println("p1 igual a p2: " + p1.esIgual(p2));
+        System.out.println("p1 igual a p3: " + p1.esIgual(p3));
+ 
+        try {
+            for (int i = 0; i < 5; i++)
+                System.out.print(p1.pop() + " ");
+        } catch (ExcepcionPilaVacia e) {
+            System.out.println("\n" + e.getMessage());
+        }
+    }
+}
+------------------------EJERCICIOS PROPUESTOS-------------------------------------
+package Ejercicio1;
+/**
+ * Clase generica Par: guarda dos elementos que pueden ser de tipos distintos.
+ * F es el tipo del primer elemento y S es el tipo del segundo elemento.
+ */
+public class Par<F, S> {
+
+    private F primero;
+    private S segundo;
+
+    public Par(F primero, S segundo) {
+        this.primero = primero;
+        this.segundo = segundo;
+    }
+
+    // Devuelve F: quien llama recibe el tipo exacto y no necesita hacer casting.
+    public F getPrimero() {
+        return primero;
+    }
+
+    // Devuelve S por la misma razon: el tipo del segundo elemento se conserva.
+    public S getSegundo() {
+        return segundo;
+    }
+
+    // Solo acepta un valor de tipo F. Si se intenta guardar otro tipo,
+    // el error aparece al compilar y no al ejecutar el programa.
+    public void setPrimero(F primero) {
+        this.primero = primero;
+    }
+
+    // Solo acepta un valor de tipo S.
+    public void setSegundo(S segundo) {
+        this.segundo = segundo;
+    }
+
+    // Al concatenar con "+", Java llama automaticamente al toString de cada elemento.
+    @Override
+    public String toString() {
+        return "(Primero: " + primero + ", Segundo: " + segundo + ")";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio1;
+
+public class PruebaPar {
+
+    public static void main(String[] args) {
+
+        // Par de String e Integer. El valor 20 pasa por autoboxing.
+        Par<String, Integer> parAlumno = new Par<>("Renato", 20);
+        System.out.println("Par de alumno: " + parAlumno);
+
+        // Par de Double y Boolean.
+        Par<Double, Boolean> parMedicion = new Par<>(3.5, true);
+        System.out.println("Par de medicion: " + parMedicion);
+
+        // Los getters devuelven el tipo exacto, por eso se asigna a String e Integer
+        // sin casting. Con una clase que guarde Object si seria necesario.
+        String nombre = parAlumno.getPrimero();
+        Integer edad = parAlumno.getSegundo();
+        System.out.println("Nombre leido: " + nombre + ", edad leida: " + edad);
+
+        // Los setters modifican cada elemento respetando su tipo.
+        parAlumno.setPrimero("Daniel");
+        parAlumno.setSegundo(21);
+        System.out.println("Par de alumno modificado: " + parAlumno);
+
+    }
+}
+
+2--------------------------------------------------
+package Ejercicio2;
+
+public class Par<F, S> {
+
+    private F primero;
+    private S segundo;
+
+    public Par(F primero, S segundo) {
+        this.primero = primero;
+        this.segundo = segundo;
+    }
+
+    // Devuelve F: quien llama recibe el tipo exacto y no necesita hacer casting.
+    public F getPrimero() {
+        return primero;
+    }
+
+    // Devuelve S por la misma razon: el tipo del segundo elemento se conserva.
+    public S getSegundo() {
+        return segundo;
+    }
+
+    // Solo acepta un valor de tipo F. Si se intenta guardar otro tipo,
+    // el error aparece al compilar y no al ejecutar el programa.
+    public void setPrimero(F primero) {
+        this.primero = primero;
+    }
+
+    // Solo acepta un valor de tipo S.
+    public void setSegundo(S segundo) {
+        this.segundo = segundo;
+    }
+
+    // El parametro es Par<F, S>, es decir, el otro par debe tener los mismos tipos
+    // que este. Comparar un Par<String, Integer> con un Par<Double, Boolean> ni
+    // siquiera compila, porque nunca podrian ser iguales.
+    public boolean esIgual(Par<F, S> otro) {
+        // Un par nunca es igual a una referencia nula
+        if (otro == null) {
+            return false;
+        }
+        // Son iguales solo si coinciden los dos valores y en el mismo orden
+        return sonIguales(this.primero, otro.primero)
+                && sonIguales(this.segundo, otro.segundo);
+    }
+
+    // Metodo auxiliar que compara dos valores con equals.
+    // Se usa equals y no "==" porque "==" compara referencias y equals compara el contenido.
+    // Se revisa null antes para evitar un NullPointerException al llamar a equals.
+    private boolean sonIguales(Object a, Object b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equals(b);
+    }
+
+    @Override
+    public String toString() {
+        return "(Primero: " + primero + ", Segundo: " + segundo + ")";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+
+public class PruebaPar {
+
+    public static void main(String[] args) {
+
+        Par<String, Integer> parAlumno = new Par<>("Renato", 20);
+        System.out.println("Par de alumno: " + parAlumno);
+
+        Par<Double, Boolean> parMedicion = new Par<>(3.5, true);
+        System.out.println("Par de medicion: " + parMedicion);
+
+        // Los getters devuelven el tipo exacto, por eso se asigna a String e Integer
+        // sin casting.
+        String nombre = parAlumno.getPrimero();
+        Integer edad = parAlumno.getSegundo();
+        System.out.println("Nombre leido: " + nombre + ", edad leida: " + edad);
+
+        // Los setters modifican cada elemento respetando su tipo.
+        parAlumno.setPrimero("Daniel");
+        parAlumno.setSegundo(21);
+        System.out.println("Par de alumno modificado: " + parAlumno);
+
+        System.out.println();
+        System.out.println("Pruebas del metodo esIgual");
+
+        Par<String, Integer> parA = new Par<>("Renato", 20);
+
+        // Mismos valores en el mismo orden: debe dar true.
+        Par<String, Integer> parB = new Par<>("Renato", 20);
+        System.out.println("Mismos valores: " + parA.esIgual(parB));
+
+        // new String crea otro objeto en memoria con el mismo texto. Aun asi da true
+        // porque esIgual usa equals, que compara contenido y no referencias.
+        Par<String, Integer> parC = new Par<>(new String("Renato"), 20);
+        System.out.println("Mismo texto, distinto objeto: " + parA.esIgual(parC));
+
+        // Cambia solo el primer elemento: debe dar false.
+        Par<String, Integer> parD = new Par<>("Daniel", 20);
+        System.out.println("Distinto primer elemento: " + parA.esIgual(parD));
+
+        // Cambia solo el segundo elemento: debe dar false.
+        Par<String, Integer> parE = new Par<>("Renato", 25);
+        System.out.println("Distinto segundo elemento: " + parA.esIgual(parE));
+
+        // Mismos valores en distinto orden: debe dar false, el orden importa.
+        Par<Integer, Integer> parUnoDos = new Par<>(1, 2);
+        Par<Integer, Integer> parDosUno = new Par<>(2, 1);
+        System.out.println("Mismos valores, distinto orden: " + parUnoDos.esIgual(parDosUno));
+
+        // Comparacion con null: debe dar false y no lanzar excepcion.
+        System.out.println("Comparado con null: " + parA.esIgual(null));
+
+        // Par con un elemento nulo: la comparacion tampoco lanza excepcion.
+        Par<String, Integer> parConNulo1 = new Par<>(null, 5);
+        Par<String, Integer> parConNulo2 = new Par<>(null, 5);
+        System.out.println("Pares con elemento nulo: " + parConNulo1.esIgual(parConNulo2));
+
+    }
+}
+
+3------------------------------------------------------
+package Ejercicio3;
+
+public class Main {
+
+    // <F, S> antes del tipo de retorno declara los
+    // parametros de tipo del metodo. Es estatico porque no depende de ningun objeto
+    // de Main.
+    // Los nombres F y S son independientes de los de la clase Par.
+    public static <F, S> void imprimirPar(Par<F, S> par) {
+        // println llama al toString de Par, que ya da el formato pedido
+        System.out.println(par);
+    }
+
+    public static void main(String[] args) {
+
+        // Par de String e Integer.
+        // El compilador deduce F = String y S = Integer a partir del argumento
+        Par<String, Integer> parTextoNumero = new Par<>("Edad", 20);
+        System.out.print("Par String e Integer: ");
+        imprimirPar(parTextoNumero);
+
+        // Par de Double y Boolean. Los valores primitivos 3.5 y true se convierten
+        // a Double y Boolean por autoboxing.
+        Par<Double, Boolean> parDecimalLogico = new Par<>(3.5, true);
+        System.out.print("Par Double y Boolean: ");
+        imprimirPar(parDecimalLogico);
+
+        // Par de Persona e Integer, aqui el primer elemento es un objeto propio.
+        Par<Persona, Integer> parPersonaCodigo = new Par<>(new Persona("Renato", 20), 1001);
+        System.out.print("Par Persona e Integer: ");
+        imprimirPar(parPersonaCodigo);
+    }
+}
+Java — Código Fuente
+package Ejercicio3;
+
+public class Par<F, S> {
+
+    private F primero;
+    private S segundo;
+
+    public Par(F primero, S segundo) {
+        this.primero = primero;
+        this.segundo = segundo;
+    }
+
+    public F getPrimero() {
+        return primero;
+    }
+
+    public S getSegundo() {
+        return segundo;
+    }
+
+    public void setPrimero(F primero) {
+        this.primero = primero;
+    }
+
+    public void setSegundo(S segundo) {
+        this.segundo = segundo;
+    }
+
+    public boolean esIgual(Par<F, S> otro) {
+        if (otro == null) {
+            return false;
+        }
+        return sonIguales(this.primero, otro.primero)
+                && sonIguales(this.segundo, otro.segundo);
+    }
+
+    private boolean sonIguales(Object a, Object b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equals(b);
+    }
+
+    @Override
+    public String toString() {
+        return "(Primero: " + primero + ", Segundo: " + segundo + ")";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+/* uno de los tipos que puede guardar un Par.
+ * Las clases y metodos genericos tambien trabajan
+ * con objetos propios y no solo con String, Integer o Double.
+ */
+public class Persona {
+
+    private String nombre;
+    private int edad;
+
+    public Persona(String nombre, int edad) {
+        this.nombre = nombre;
+        this.edad = edad;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public int getEdad() {
+        return edad;
+    }
+
+    // Par.toString concatena los elementos, y eso llama a este metodo.
+    @Override
+    public String toString() {
+        return "Persona: " + nombre + ", edad " + edad;
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+public class PruebaPar {
+
+    public static void main(String[] args) {
+
+        Par<String, Integer> parAlumno = new Par<>("Renato", 20);
+        System.out.println("Par de alumno: " + parAlumno);
+
+        Par<Double, Boolean> parMedicion = new Par<>(3.5, true);
+        System.out.println("Par de medicion: " + parMedicion);
+
+        String nombre = parAlumno.getPrimero();
+        Integer edad = parAlumno.getSegundo();
+        System.out.println("Nombre leido: " + nombre + ", edad leida: " + edad);
+
+        parAlumno.setPrimero("Daniel");
+        parAlumno.setSegundo(21);
+        System.out.println("Par de alumno modificado: " + parAlumno);
+
+        System.out.println();
+        System.out.println("Pruebas del metodo esIgual");
+
+        Par<String, Integer> parA = new Par<>("Renato", 20);
+
+        Par<String, Integer> parB = new Par<>("Renato", 20);
+        System.out.println("Mismos valores: " + parA.esIgual(parB));
+
+        Par<String, Integer> parC = new Par<>(new String("Renato"), 20);
+        System.out.println("Mismo texto, distinto objeto: " + parA.esIgual(parC));
+
+        Par<String, Integer> parD = new Par<>("Daniel", 20);
+        System.out.println("Distinto primer elemento: " + parA.esIgual(parD));
+
+        Par<String, Integer> parE = new Par<>("Renato", 25);
+        System.out.println("Distinto segundo elemento: " + parA.esIgual(parE));
+
+        Par<Integer, Integer> parUnoDos = new Par<>(1, 2);
+        Par<Integer, Integer> parDosUno = new Par<>(2, 1);
+        System.out.println("Mismos valores, distinto orden: " + parUnoDos.esIgual(parDosUno));
+
+        System.out.println("Comparado con null: " + parA.esIgual(null));
+
+        Par<String, Integer> parConNulo1 = new Par<>(null, 5);
+        Par<String, Integer> parConNulo2 = new Par<>(null, 5);
+        System.out.println("Pares con elemento nulo: " + parConNulo1.esIgual(parConNulo2));
+
+    }
+}
+4---------------------------------------------------
+package Ejercicio4;
+
+import java.util.ArrayList;
+
+public class Contenedor<F, S> {
+
+    // un generico dentro de otro generico.
+    // Los tipos F y S del contenedor pasan directamente al Par, por eso todos los
+    // pares guardados tienen los mismos tipos. Se usa ArrayList y no un arreglo
+    // porque crece solo y no hay que definir un tamano fijo.
+    private ArrayList<Par<F, S>> pares;
+
+    // El operador diamante <> deja que el compilador deduzca los tipos del ArrayList
+    // a partir de la declaracion del atributo.
+    public Contenedor() {
+        pares = new ArrayList<>();
+    }
+
+    //el compilador verifica que primero sea de tipo F y segundo de tipo S.
+    public void agregarPar(F primero, S segundo) {
+        pares.add(new Par<>(primero, segundo));
+    }
+
+    // Devuelve el par de la posicion indicada. El retorno es Par<F, S>, por eso
+    // quien lo recibe puede usar getPrimero y getSegundo sin casting.
+    // Si el indice no existe, ArrayList lanza IndexOutOfBoundsException (no
+    // verificada), y se deja que llegue a quien llama para que decida que hacer.
+    public Par<F, S> obtenerPar(int indice) {
+        return pares.get(indice);
+    }
+
+    // Devuelve una copia de la lista y no la lista interna. Asi, quien la recibe
+    // puede modificarla sin alterar lo que guarda el contenedor
+    public ArrayList<Par<F, S>> obtenerTodosLosPares() {
+        return new ArrayList<>(pares);
+    }
+
+    // Imprime todos los pares numerados desde 1.println llama al toString de cada par.
+    public void mostrarPares() {
+        if (pares.isEmpty()) {
+            System.out.println("El contenedor no tiene pares");
+            return;
+        }
+        int numero = 1;
+        for (Par<F, S> par : pares) {
+            System.out.println(numero + ". " + par);
+            numero++;
+        }
+    }
+}
+-----------
+Java — Código Fuente
+package Ejercicio4;
+
+public class Par<F, S> {
+	
+    private F primero;
+    private S segundo;
+
+    public Par(F primero, S segundo) {
+        this.primero = primero;
+        this.segundo = segundo;
+    }
+
+    public F getPrimero() {
+        return primero;
+    }
+
+    public S getSegundo() {
+        return segundo;
+    }
+
+    public void setPrimero(F primero) {
+        this.primero = primero;
+    }
+
+    public void setSegundo(S segundo) {
+        this.segundo = segundo;
+    }
+
+    public boolean esIgual(Par<F, S> otro) {
+        if (otro == null) {
+            return false;
+        }
+        return sonIguales(this.primero, otro.primero)
+                && sonIguales(this.segundo, otro.segundo);
+    }
+
+    private boolean sonIguales(Object a, Object b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equals(b);
+    }
+
+    @Override
+    public String toString() {
+        return "(Primero: " + primero + ", Segundo: " + segundo + ")";
+    }
+}
+--------
+Java — Código Fuente
+package Ejercicio4;
+
+import java.util.ArrayList;
+
+public class PruebaContenedor {
+
+    public static void main(String[] args) {
+
+        // Al indicar <String, Integer> el compilador exige esos tipos en agregarPar.
+        Contenedor<String, Integer> notas = new Contenedor<>();
+
+        // Prueba con el contenedor vacio
+        System.out.println("Contenedor vacio:");
+        notas.mostrarPares();
+
+        // agregarPar: los enteros 18, 15 y 20 pasan por autoboxing a Integer
+        notas.agregarPar("Renato", 18);
+        notas.agregarPar("Daniel", 15);
+        notas.agregarPar("Camila", 20);
+
+        System.out.println();
+        System.out.println("Contenedor con tres pares:");
+        notas.mostrarPares();
+
+        // obtenerPar: el resultado es un Par<String, Integer>, por eso los getters
+        // devuelven String e Integer directamente, sin casting
+        Par<String, Integer> segundoPar = notas.obtenerPar(1);
+        String nombre = segundoPar.getPrimero();
+        Integer nota = segundoPar.getSegundo();
+        System.out.println();
+        System.out.println("Par en la posicion 1: " + segundoPar);
+        System.out.println("Nombre: " + nombre + ", nota: " + nota);
+
+        // obtenerTodosLosPares: devuelve una copia de la lista
+        ArrayList<Par<String, Integer>> copia = notas.obtenerTodosLosPares();
+        System.out.println();
+        System.out.println("Cantidad de pares obtenidos: " + copia.size());
+
+        // Se borra la copia para comprobar que el contenedor original no cambia
+        copia.clear();
+        System.out.println("Pares en la copia despues de limpiarla: " + copia.size());
+        System.out.println("Pares que sigue guardando el contenedor:");
+        notas.mostrarPares();
+
+        // Indice fuera de rango: se captura la excepcion que lanza ArrayList
+        System.out.println();
+        try {
+            notas.obtenerPar(10);
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println("Error al obtener el par 10: " + e.getMessage());
+        }
+
+        // Los mismos tipos genericos permiten otra combinacion sin cambiar la clase
+        Contenedor<Double, Boolean> mediciones = new Contenedor<>();
+        mediciones.agregarPar(3.5, true);
+        mediciones.agregarPar(7.2, false);
+        System.out.println();
+        System.out.println("Contenedor de Double y Boolean:");
+        mediciones.mostrarPares();
+    }
+}
+
+
