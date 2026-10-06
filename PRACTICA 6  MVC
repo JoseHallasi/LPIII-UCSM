@@ -152,7 +152,7 @@ public class Main {
         controlador.iniciar();
     }
 }
-
+------------------------------------------------------------------------------------------------------
 B) ACTIVIDAD 2 
 
 Deben modificar la clase pedido para que los platos no tengan solo un nombre sino también un tipo
@@ -392,7 +392,7 @@ Java — Código Fuente
         vista.cerrarScanner();
     }
 }
-
+------------------------------------------------------------------------------------------------------
 C) ACTIVIDAD 3
 
 Deben modificar la clase pedido para poder guardar un estado si el pedido ha sido completado,
@@ -742,5 +742,1426 @@ Java — Código Fuente
 }
 
 ----------------------------EJERCICIOS-----------------------------------------
+EJERCICIOS PROPUESTOS 
 
+----------------------------------------------------------------------------------------------------
+1. Desarrolla un sistema de carrito de compras utilizando el patrón Modelo-Vista-Controlador (MVC) en Java. La aplicación debe permitir a los usuarios agregar productos, listar productos, agregar producto al carrito, ver carrito y eliminar producto del carrito, aplicar descuentos, calcular envío, ver el historial de compras y realizar la compra.
+
+Java — Código Fuente
+package Ejercicio1;
+
+public class CarritoControlador {
+ 
+    private CarritoModelo modelo;
+    private CarritoVista vista;
+ 
+    public CarritoControlador(CarritoModelo modelo, CarritoVista vista) {
+        this.modelo = modelo;
+        this.vista = vista;
+    }
+ 
+    public void iniciar() {
+        String opcion;
+        do {
+            vista.mostrarMenu();
+            opcion = vista.solicitarOpcion();
+            switch (opcion) {
+                case "1":
+                    agregarProductoAlCatalogo();
+                    break;
+                case "2":
+                    listarProductos();
+                    break;
+                case "3":
+                    agregarAlCarrito();
+                    break;
+                case "4":
+                    verCarrito();
+                    break;
+                case "5":
+                    eliminarDelCarrito();
+                    break;
+                case "6":
+                    aplicarDescuento();
+                    break;
+                case "7":
+                    calcularEnvio();
+                    break;
+                case "8":
+                    verHistorial();
+                    break;
+                case "9":
+                    realizarCompra();
+                    break;
+                case "0":
+                    vista.mostrarMensaje("Saliendo...");
+                    break;
+                default:
+                    vista.mostrarMensaje("Opcion no valida. Intentalo de nuevo.");
+            }
+        } while (!opcion.equals("0"));
+        vista.cerrarScanner();
+    }
+ 
+    private void agregarProductoAlCatalogo() {
+        String nombre = vista.solicitarTexto("Nombre del producto: ");
+        double precio = vista.solicitarDecimal("Precio: ");
+        int stock = vista.solicitarEntero("Stock disponible: ");
+ 
+        if (nombre.isEmpty()) {
+            vista.mostrarMensaje("El nombre del producto no puede estar vacio.");
+        } else if (precio <= 0) {
+            vista.mostrarMensaje("El precio debe ser mayor que cero.");
+        } else if (stock < 0) {
+            vista.mostrarMensaje("El stock no puede ser negativo.");
+        } else {
+            Producto producto = modelo.agregarProducto(nombre, precio, stock);
+            vista.mostrarMensaje("Producto agregado: " + producto.getNombre()
+                    + " (codigo " + producto.getId() + ")");
+        }
+    }
+ 
+    private void listarProductos() {
+        vista.mostrarProductos(modelo.getProductos());
+    }
+ 
+    private void agregarAlCarrito() {
+        if (modelo.getProductos().isEmpty()) {
+            vista.mostrarMensaje("No hay productos para agregar al carrito.");
+            return;
+        }
+        vista.mostrarProductos(modelo.getProductos());
+        int id = vista.solicitarEntero("Codigo del producto: ");
+        int cantidad = vista.solicitarEntero("Cantidad: ");
+ 
+        Producto producto = modelo.buscarProductoPorId(id);
+        if (producto == null) {
+            vista.mostrarMensaje("No existe un producto con ese codigo.");
+        } else if (cantidad <= 0) {
+            vista.mostrarMensaje("La cantidad debe ser mayor que cero.");
+        } else if (modelo.agregarAlCarrito(producto, cantidad)) {
+            vista.mostrarMensaje("Producto agregado al carrito: " + producto.getNombre()
+                    + " x" + cantidad);
+        } else {
+            vista.mostrarMensaje("Stock insuficiente. Stock total de " + producto.getNombre()
+                    + ": " + producto.getStock() + " (incluye lo que ya tienes en el carrito).");
+        }
+    }
+ 
+    private void verCarrito() {
+        vista.mostrarCarrito(modelo.getCarrito());
+        if (!modelo.carritoVacio()) {
+            vista.mostrarResumen(modelo.calcularSubtotal(), modelo.getPorcentajeDescuento(),
+                    modelo.calcularDescuento(), modelo.calcularEnvio(), modelo.calcularTotal());
+        }
+    }
+ 
+    private void eliminarDelCarrito() {
+        if (modelo.carritoVacio()) {
+            vista.mostrarMensaje("El carrito esta vacio, no hay nada que eliminar.");
+            return;
+        }
+        vista.mostrarCarrito(modelo.getCarrito());
+        int id = vista.solicitarEntero("Codigo del producto a eliminar: ");
+        if (modelo.eliminarDelCarrito(id)) {
+            vista.mostrarMensaje("Producto eliminado del carrito.");
+        } else {
+            vista.mostrarMensaje("Ese producto no esta en el carrito.");
+        }
+    }
+ 
+    private void aplicarDescuento() {
+        String codigo = vista.solicitarTexto("Codigo de descuento: ");
+        if (modelo.aplicarDescuento(codigo)) {
+            vista.mostrarMensaje("Descuento aplicado: " + modelo.getPorcentajeDescuento() + "%");
+        } else {
+            vista.mostrarMensaje("Codigo de descuento no valido.");
+        }
+    }
+ 
+    private void calcularEnvio() {
+        if (modelo.carritoVacio()) {
+            vista.mostrarMensaje("El carrito esta vacio, no hay envio que calcular.");
+            return;
+        }
+        vista.mostrarEnvio(modelo.calcularEnvio(), CarritoModelo.ENVIO_GRATIS_DESDE);
+    }
+ 
+    private void verHistorial() {
+        vista.mostrarHistorial(modelo.getHistorial());
+    }
+ 
+    private void realizarCompra() {
+        Compra compra = modelo.realizarCompra();
+        if (compra == null) {
+            vista.mostrarMensaje("El carrito esta vacio, no se puede realizar la compra.");
+        } else {
+            vista.mostrarCompra(compra);
+            vista.mostrarMensaje("Gracias por tu compra.");
+        }
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio1;
+
+import java.util.ArrayList;
+import java.util.List;
+ 
+public class CarritoModelo {
+ 
+    public static final double COSTO_ENVIO = 10.0;
+    public static final double ENVIO_GRATIS_DESDE = 100.0;
+    public static final String CODIGO_DESCUENTO_BASICO = "PROMO10";
+    public static final int PORCENTAJE_DESCUENTO_BASICO = 10;
+    public static final String CODIGO_DESCUENTO_ESPECIAL = "PROMO20";
+    public static final int PORCENTAJE_DESCUENTO_ESPECIAL = 20;
+ 
+    private List<Producto> productos;
+    private List<ItemCarrito> carrito;
+    private List<Compra> historial;
+    private int porcentajeDescuento;
+    private int siguienteIdProducto;
+    private int siguienteNumeroCompra;
+ 
+    public CarritoModelo() {
+        productos = new ArrayList<>();
+        carrito = new ArrayList<>();
+        historial = new ArrayList<>();
+        porcentajeDescuento = 0;
+        siguienteIdProducto = 1;
+        siguienteNumeroCompra = 1;
+    }
+  
+    public Producto agregarProducto(String nombre, double precio, int stock) {
+        Producto producto = new Producto(siguienteIdProducto, nombre, precio, stock);
+        siguienteIdProducto++;
+        productos.add(producto);
+        return producto;
+    }
+ 
+    public List<Producto> getProductos() {
+        return new ArrayList<>(productos);
+    }
+ 
+    // Devuelve null si no existe un producto con ese codigo
+    public Producto buscarProductoPorId(int id) {
+        for (Producto producto : productos) {
+            if (producto.getId() == id) {
+                return producto;
+            }
+        }
+        return null;
+    }
+  
+    public boolean agregarAlCarrito(Producto producto, int cantidad) {
+        ItemCarrito existente = buscarItem(producto.getId());
+        int cantidadEnCarrito = 0;
+        if (existente != null) {
+            cantidadEnCarrito = existente.getCantidad();
+        }
+        if (cantidadEnCarrito + cantidad > producto.getStock()) {
+            return false;
+        }
+        if (existente == null) {
+            carrito.add(new ItemCarrito(producto, cantidad));
+        } else {
+            existente.aumentarCantidad(cantidad);
+        }
+        return true;
+    }
+ 
+    public boolean eliminarDelCarrito(int idProducto) {
+        for (int i = 0; i < carrito.size(); i++) {
+            if (carrito.get(i).getProducto().getId() == idProducto) {
+                carrito.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+ 
+    public List<ItemCarrito> getCarrito() {
+        return new ArrayList<>(carrito);
+    }
+ 
+    public boolean carritoVacio() {
+        return carrito.isEmpty();
+    }
+ 
+    private ItemCarrito buscarItem(int idProducto) {
+        for (ItemCarrito item : carrito) {
+            if (item.getProducto().getId() == idProducto) {
+                return item;
+            }
+        }
+        return null;
+    }
+  
+    public boolean aplicarDescuento(String codigo) {
+        if (codigo.equalsIgnoreCase(CODIGO_DESCUENTO_BASICO)) {
+            porcentajeDescuento = PORCENTAJE_DESCUENTO_BASICO;
+            return true;
+        }
+        if (codigo.equalsIgnoreCase(CODIGO_DESCUENTO_ESPECIAL)) {
+            porcentajeDescuento = PORCENTAJE_DESCUENTO_ESPECIAL;
+            return true;
+        }
+        return false;
+    }
+ 
+    public int getPorcentajeDescuento() {
+        return porcentajeDescuento;
+    }
+ 
+    public double calcularSubtotal() {
+        double subtotal = 0;
+        for (ItemCarrito item : carrito) {
+            subtotal = subtotal + item.getSubtotal();
+        }
+        return subtotal;
+    }
+ 
+    public double calcularDescuento() {
+        return calcularSubtotal() * porcentajeDescuento / 100.0;
+    }
+ 
+    public double calcularEnvio() {
+        if (carrito.isEmpty()) {
+            return 0.0;
+        }
+        double montoConDescuento = calcularSubtotal() - calcularDescuento();
+        if (montoConDescuento >= ENVIO_GRATIS_DESDE) {
+            return 0.0;
+        }
+        return COSTO_ENVIO;
+    }
+ 
+    public double calcularTotal() {
+        return calcularSubtotal() - calcularDescuento() + calcularEnvio();
+    }
+ 
+ 
+    public Compra realizarCompra() {
+        if (carrito.isEmpty()) {
+            return null;
+        }
+        List<ItemCarrito> itemsComprados = new ArrayList<>(carrito);
+        Compra compra = new Compra(siguienteNumeroCompra, itemsComprados, porcentajeDescuento,
+                calcularSubtotal(), calcularDescuento(), calcularEnvio(), calcularTotal());
+        siguienteNumeroCompra++;
+ 
+        for (ItemCarrito item : itemsComprados) {
+            item.getProducto().reducirStock(item.getCantidad());
+        }
+        historial.add(compra);
+ 
+        carrito.clear();
+        porcentajeDescuento = 0;
+        return compra;
+    }
+ 
+    public List<Compra> getHistorial() {
+        return new ArrayList<>(historial);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio1;
+
+import java.util.List;
+import java.util.Scanner;
+
+public class CarritoVista {
+ 
+    private Scanner scanner;
+ 
+    public CarritoVista() {
+        scanner = new Scanner(System.in);
+    }
+  
+    public void mostrarMenu() {
+        System.out.println();
+        System.out.println("===== Carrito de compras =====");
+        System.out.println("1. Agregar producto al catalogo");
+        System.out.println("2. Listar productos");
+        System.out.println("3. Agregar producto al carrito");
+        System.out.println("4. Ver carrito");
+        System.out.println("5. Eliminar producto del carrito");
+        System.out.println("6. Aplicar descuento");
+        System.out.println("7. Calcular envio");
+        System.out.println("8. Ver historial de compras");
+        System.out.println("9. Realizar compra");
+        System.out.println("0. Salir");
+    }
+ 
+    public String solicitarOpcion() {
+        System.out.print("Selecciona una opcion: ");
+        return scanner.nextLine().trim();
+    }
+ 
+    public String solicitarTexto(String mensaje) {
+        System.out.print(mensaje);
+        return scanner.nextLine().trim();
+    }
+ 
+    public int solicitarEntero(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String texto = scanner.nextLine().trim();
+            try {
+                return Integer.parseInt(texto);
+            } catch (NumberFormatException e) {
+                System.out.println("Debes escribir un numero entero valido.");
+            }
+        }
+    }
+ 
+    public double solicitarDecimal(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String texto = scanner.nextLine().trim();
+            try {
+                return Double.parseDouble(texto);
+            } catch (NumberFormatException e) {
+                System.out.println("Debes escribir un numero valido, con punto decimal. Ejemplo: 25.50");
+            }
+        }
+    }
+  
+    public void mostrarMensaje(String mensaje) {
+        System.out.println(mensaje);
+    }
+ 
+    public void mostrarProductos(List<Producto> productos) {
+        if (productos.isEmpty()) {
+            System.out.println("No hay productos registrados.");
+            return;
+        }
+        System.out.println("Catalogo de productos:");
+        for (Producto producto : productos) {
+            System.out.printf("%d. %s - S/ %.2f - stock: %d%n", producto.getId(),
+                    producto.getNombre(), producto.getPrecio(), producto.getStock());
+        }
+    }
+ 
+    public void mostrarCarrito(List<ItemCarrito> items) {
+        if (items.isEmpty()) {
+            System.out.println("El carrito esta vacio.");
+            return;
+        }
+        System.out.println("Carrito de compras:");
+        for (ItemCarrito item : items) {
+            System.out.printf("%d. %s x%d - S/ %.2f%n", item.getProducto().getId(),
+                    item.getProducto().getNombre(), item.getCantidad(), item.getSubtotal());
+        }
+    }
+ 
+    public void mostrarResumen(double subtotal, int porcentajeDescuento, double descuento,
+                               double envio, double total) {
+        System.out.printf("Subtotal: S/ %.2f%n", subtotal);
+        System.out.printf("Descuento (%d%%): S/ %.2f%n", porcentajeDescuento, descuento);
+        System.out.printf("Envio: S/ %.2f%n", envio);
+        System.out.printf("Total a pagar: S/ %.2f%n", total);
+    }
+ 
+    public void mostrarEnvio(double envio, double envioGratisDesde) {
+        if (envio == 0) {
+            System.out.println("Envio gratis.");
+        } else {
+            System.out.printf("Costo de envio: S/ %.2f%n", envio);
+            System.out.printf("El envio es gratis desde S/ %.2f (con descuento aplicado).%n",
+                    envioGratisDesde);
+        }
+    }
+ 
+    public void mostrarCompra(Compra compra) {
+        System.out.println("Compra numero " + compra.getNumero());
+        for (ItemCarrito item : compra.getItems()) {
+            System.out.printf("  - %s x%d - S/ %.2f%n", item.getProducto().getNombre(),
+                    item.getCantidad(), item.getSubtotal());
+        }
+        mostrarResumen(compra.getSubtotal(), compra.getPorcentajeDescuento(),
+                compra.getDescuento(), compra.getEnvio(), compra.getTotal());
+    }
+ 
+    public void mostrarHistorial(List<Compra> historial) {
+        if (historial.isEmpty()) {
+            System.out.println("Todavia no hay compras realizadas.");
+            return;
+        }
+        System.out.println("Historial de compras:");
+        for (Compra compra : historial) {
+            System.out.println();
+            mostrarCompra(compra);
+        }
+    }
+ 
+    public void cerrarScanner() {
+        scanner.close();
+    }
+}
+
+Java — Código Fuente
+package Ejercicio1;
+
+import java.util.List;
+
+public class Compra {
+ 
+    private int numero;
+    private List<ItemCarrito> items;
+    private int porcentajeDescuento;
+    private double subtotal;
+    private double descuento;
+    private double envio;
+    private double total;
+ 
+    public Compra(int numero, List<ItemCarrito> items, int porcentajeDescuento,
+                  double subtotal, double descuento, double envio, double total) {
+        this.numero = numero;
+        this.items = items;
+        this.porcentajeDescuento = porcentajeDescuento;
+        this.subtotal = subtotal;
+        this.descuento = descuento;
+        this.envio = envio;
+        this.total = total;
+    }
+ 
+    public int getNumero() {
+        return numero;
+    }
+ 
+    public List<ItemCarrito> getItems() {
+        return items;
+    }
+ 
+    public int getPorcentajeDescuento() {
+        return porcentajeDescuento;
+    }
+ 
+    public double getSubtotal() {
+        return subtotal;
+    }
+ 
+    public double getDescuento() {
+        return descuento;
+    }
+ 
+    public double getEnvio() {
+        return envio;
+    }
+ 
+    public double getTotal() {
+        return total;
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio1;
+
+public class ItemCarrito {
+ 
+    private Producto producto;
+    private int cantidad;
+ 
+    public ItemCarrito(Producto producto, int cantidad) {
+        this.producto = producto;
+        this.cantidad = cantidad;
+    }
+ 
+    public Producto getProducto() {
+        return producto;
+    }
+ 
+    public int getCantidad() {
+        return cantidad;
+    }
+ 
+    public void aumentarCantidad(int cantidadExtra) {
+        cantidad = cantidad + cantidadExtra;
+    }
+ 
+    public double getSubtotal() {
+        return producto.getPrecio() * cantidad;
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio1;
+
+public class Main {
+ 
+    public static void main(String[] args) {
+        CarritoModelo modelo = new CarritoModelo();
+        CarritoVista vista = new CarritoVista();
+        CarritoControlador controlador = new CarritoControlador(modelo, vista);
+ 
+        modelo.agregarProducto("Teclado", 80.0, 5);
+        modelo.agregarProducto("Mouse", 35.5, 10);
+        modelo.agregarProducto("Monitor", 450.0, 3);
+        modelo.agregarProducto("Audifonos", 60.0, 8);
+        modelo.agregarProducto("Cable HDMI", 15.0, 20);
+ 
+        controlador.iniciar();
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio1;
+
+public class Producto {
+ 
+    private int id;
+    private String nombre;
+    private double precio;
+    private int stock;
+ 
+    public Producto(int id, String nombre, double precio, int stock) {
+        this.id = id;
+        this.nombre = nombre;
+        this.precio = precio;
+        this.stock = stock;
+    }
+ 
+    public int getId() {
+        return id;
+    }
+ 
+    public String getNombre() {
+        return nombre;
+    }
+ 
+    public double getPrecio() {
+        return precio;
+    }
+ 
+    public int getStock() {
+        return stock;
+    }
+ 
+    public void reducirStock(int cantidad) {
+        stock = stock - cantidad;
+    }
+}
+
+
+ 
+-------------------------------------------------------------------------------------------------------
+
+2. Creen un programa utilizando el patrón MVC en Java para un sistema de gestión de inventarios utilizando los elementos de la siguiente figura
+
+ 
+
+Java — Código Fuente
+package Ejercicio2;
+
+import java.util.List;
+
+public class InventarioControlador {
+ 
+    private InventarioModelo modelo;
+    private InventarioVista vista;
+ 
+    public InventarioControlador(InventarioModelo modelo, InventarioVista vista) {
+        this.modelo = modelo;
+        this.vista = vista;
+    }
+ 
+    public void iniciar() {
+        String opcion;
+        do {
+            vista.mostrarMenu();
+            opcion = vista.solicitarOpcion();
+            switch (opcion) {
+                case "1":
+                    agregarItem();
+                    break;
+                case "2":
+                    eliminarItem();
+                    break;
+                case "3":
+                    verInventario();
+                    break;
+                case "4":
+                    mostrarDetalles();
+                    break;
+                case "5":
+                    buscarItem();
+                    break;
+                case "6":
+                    usarItem();
+                    break;
+                case "0":
+                    vista.mostrarMensaje("Saliendo...");
+                    break;
+                default:
+                    vista.mostrarMensaje("Opcion no valida. Intentalo de nuevo.");
+            }
+        } while (!opcion.equals("0"));
+        vista.cerrarScanner();
+    }
+ 
+    private void agregarItem() {
+        String nombre = vista.solicitarTexto("Nombre del item: ");
+        int cantidad = vista.solicitarEntero("Cantidad: ");
+        int opcionTipo = vista.solicitarTipoItem();
+        String descripcion = vista.solicitarTexto("Descripcion: ");
+ 
+        String tipo;
+        if (opcionTipo == 1) {
+            tipo = Item.TIPO_ARMA;
+        } else if (opcionTipo == 2) {
+            tipo = Item.TIPO_POCION;
+        } else {
+            vista.mostrarMensaje("Tipo no valido. No se agrego el item.");
+            return;
+        }
+ 
+        if (nombre.isEmpty()) {
+            vista.mostrarMensaje("El nombre del item no puede estar vacio.");
+        } else if (cantidad <= 0) {
+            vista.mostrarMensaje("La cantidad debe ser mayor que cero.");
+        } else if (modelo.agregarItem(new Item(nombre, cantidad, tipo, descripcion))) {
+            vista.mostrarMensaje("Item agregado: " + nombre);
+        } else {
+            vista.mostrarMensaje("Ya existe un item con ese nombre.");
+        }
+    }
+ 
+    private void eliminarItem() {
+        if (modelo.obtenerItems().isEmpty()) {
+            vista.mostrarMensaje("El inventario esta vacio, no hay nada que eliminar.");
+            return;
+        }
+        vista.mostrarInventario(modelo.obtenerItems());
+        String nombre = vista.solicitarTexto("Nombre del item a eliminar: ");
+ 
+        Item item = modelo.buscarItem(nombre);
+        if (item == null) {
+            vista.mostrarMensaje("No existe un item con ese nombre.");
+        } else if (modelo.eliminarItem(item)) {
+            vista.mostrarMensaje("Item eliminado: " + item.getNombre());
+        }
+    }
+ 
+    private void verInventario() {
+        vista.mostrarInventario(modelo.obtenerItems());
+    }
+ 
+    private void mostrarDetalles() {
+        List<Item> items = modelo.obtenerItems();
+        if (items.isEmpty()) {
+            vista.mostrarMensaje("El inventario esta vacio.");
+            return;
+        }
+        vista.mostrarInventario(items);
+        int numero = vista.solicitarEntero("Numero del item: ");
+        // El numero que ve el usuario empieza en 1, la posicion de la lista en 0
+        if (numero < 1 || numero > items.size()) {
+            vista.mostrarMensaje("Numero de item no valido.");
+        } else {
+            vista.mostrarDetallesItem(items.get(numero - 1));
+        }
+    }
+ 
+    private void buscarItem() {
+        String nombre = vista.solicitarTexto("Nombre del item a buscar: ");
+        Item item = modelo.buscarItem(nombre);
+        if (item == null) {
+            vista.mostrarMensaje("No se encontro ningun item con ese nombre.");
+        } else {
+            vista.mostrarDetallesItem(item);
+        }
+    }
+ 
+    private void usarItem() {
+        String nombre = vista.solicitarTexto("Nombre del item a usar: ");
+        Item item = modelo.buscarItem(nombre);
+        if (item == null) {
+            vista.mostrarMensaje("No existe un item con ese nombre.");
+        } else if (!item.usarItem()) {
+            vista.mostrarMensaje("No quedan unidades de " + item.getNombre() + ".");
+        } else if (item.getTipo().equals(Item.TIPO_POCION)) {
+            vista.mostrarMensaje("Has usado una pocion: " + item.getNombre()
+                    + ". Unidades restantes: " + item.getCantidad());
+        } else {
+            vista.mostrarMensaje("Has usado el arma: " + item.getNombre());
+        }
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio2;
+
+import java.util.ArrayList;
+import java.util.List;
+ 
+public class InventarioModelo {
+ 
+    private List<Item> items;
+ 
+    public InventarioModelo() {
+        items = new ArrayList<>();
+    }
+ 
+    public boolean agregarItem(Item item) {
+        if (buscarItem(item.getNombre()) != null) {
+            return false;
+        }
+        items.add(item);
+        return true;
+    }
+ 
+    public boolean eliminarItem(Item item) {
+        return items.remove(item);
+    }
+ 
+    public List<Item> obtenerItems() {
+        return new ArrayList<>(items);
+    }
+ 
+    public Item buscarItem(String nombre) {
+        for (Item item : items) {
+            if (item.getNombre().equalsIgnoreCase(nombre)) {
+                return item;
+            }
+        }
+        return null;
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio2;
+
+import java.util.List;
+import java.util.Scanner;
+ 
+public class InventarioVista {
+ 
+    private Scanner scanner;
+ 
+    public InventarioVista() {
+        scanner = new Scanner(System.in);
+    }
+ 
+ 
+    public void mostrarMenu() {
+        System.out.println();
+        System.out.println("===== Inventario =====");
+        System.out.println("1. Agregar item");
+        System.out.println("2. Eliminar item");
+        System.out.println("3. Ver inventario");
+        System.out.println("4. Ver detalles de un item");
+        System.out.println("5. Buscar item por nombre");
+        System.out.println("6. Usar item");
+        System.out.println("0. Salir");
+    }
+ 
+    public String solicitarOpcion() {
+        System.out.print("Selecciona una opcion: ");
+        return scanner.nextLine().trim();
+    }
+ 
+    public String solicitarTexto(String mensaje) {
+        System.out.print(mensaje);
+        return scanner.nextLine().trim();
+    }
+ 
+    public int solicitarEntero(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String texto = scanner.nextLine().trim();
+            try {
+                return Integer.parseInt(texto);
+            } catch (NumberFormatException e) {
+                System.out.println("Debes escribir un numero entero valido.");
+            }
+        }
+    }
+ 
+    public int solicitarTipoItem() {
+        System.out.println("Tipos de item:");
+        System.out.println("1. Arma");
+        System.out.println("2. Pocion");
+        return solicitarEntero("Elige el tipo: ");
+    }
+ 
+ 
+    public void mostrarMensaje(String mensaje) {
+        System.out.println(mensaje);
+    }
+ 
+    public void mostrarInventario(List<Item> items) {
+        if (items.isEmpty()) {
+            System.out.println("El inventario esta vacio.");
+            return;
+        }
+        System.out.println("Inventario:");
+        for (int i = 0; i < items.size(); i++) {
+            Item item = items.get(i);
+            System.out.println((i + 1) + ". " + item.getNombre() + " - " + item.getTipo()
+                    + " - cantidad: " + item.getCantidad());
+        }
+    }
+ 
+    public void mostrarDetallesItem(Item item) {
+        System.out.println("Detalles del item:");
+        System.out.println("  Nombre: " + item.getNombre());
+        System.out.println("  Tipo: " + item.getTipo());
+        System.out.println("  Cantidad: " + item.getCantidad());
+        System.out.println("  Descripcion: " + item.getDescripcion());
+    }
+ 
+    public void cerrarScanner() {
+        scanner.close();
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio2;
+
+public class Item {
+ 
+    public static final String TIPO_ARMA = "Arma";
+    public static final String TIPO_POCION = "Pocion";
+ 
+    private String nombre;
+    private int cantidad;
+    private String tipo;
+    private String descripcion;
+ 
+    public Item(String nombre, int cantidad, String tipo, String descripcion) {
+        this.nombre = nombre;
+        this.cantidad = cantidad;
+        this.tipo = tipo;
+        this.descripcion = descripcion;
+    }
+ 
+    public String getNombre() {
+        return nombre;
+    }
+ 
+    public int getCantidad() {
+        return cantidad;
+    }
+ 
+    public String getTipo() {
+        return tipo;
+    }
+ 
+    public String getDescripcion() {
+        return descripcion;
+    }
+ 
+    public boolean usarItem() {
+        if (cantidad <= 0) {
+            return false;
+        }
+        if (tipo.equals(TIPO_POCION)) {
+            cantidad = cantidad - 1;
+        }
+        return true;
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio2;
+
+public class Main {
+ 
+    public static void main(String[] args) {
+        InventarioModelo modelo = new InventarioModelo();
+        InventarioVista vista = new InventarioVista();
+        InventarioControlador controlador = new InventarioControlador(modelo, vista);
+ 
+        modelo.agregarItem(new Item("Espada de hierro", 1, Item.TIPO_ARMA,
+                "Espada basica para combate cuerpo a cuerpo"));
+        modelo.agregarItem(new Item("Arco corto", 1, Item.TIPO_ARMA,
+                "Arco ligero para atacar a distancia"));
+        modelo.agregarItem(new Item("Pocion de vida", 3, Item.TIPO_POCION,
+                "Recupera salud al usarla"));
+ 
+        controlador.iniciar();
+    }
+}
+
+
+ ------------------------------------------------------------------------------------------------------
+
+3. Ampliar el sistema de gestión de inventarios previamente desarrollado para incluir la lógica de un jugador y enemigos, estos nuevos elementos deberán utilizar el patrón de diseño Modelo-Vista-Controlador (MVC). La clase jugador debe contener un nombre, salud, nivel e inventario, con métodos atacar, usar objeto y recibir daño. El ataque se debe realizar según el objeto que tenga equipado el jugador. La clase enemigo debe contener un nombre, salud, nivel y tipo, con métodos atacar y recibir daño. Se debe realizar una gestión del combate donde el jugador pueda atacar a los enemigos y los enemigos realicen acciones de forma aleatoria, mostrando los mensajes, deben agregar un controlador que gestione el combate. La vista debe mostrar el estado del combate y mensajes que indiquen lo que está sucediendo.
+
+Java — Código Fuente
+package Ejercicio3;
+ 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+ 
+public class CombateControlador {
+ 
+    private Jugador jugador;
+    private Vista vista;
+    private JuegoControlador juego;
+    private Random azar = new Random();
+ 
+    public CombateControlador(Jugador jugador, Vista vista, JuegoControlador juego) {
+        this.jugador = jugador;
+        this.vista = vista;
+        this.juego = juego;
+    }
+ 
+    public void iniciar() {
+        List<Enemigo> enemigos = new ArrayList<>();
+        int cantidad = 1 + azar.nextInt(3);
+        for (int i = 1; i <= cantidad; i++) enemigos.add(Enemigo.aleatorio(jugador.getNivel(), i));
+        vista.msg("\nAparecen " + cantidad + " enemigo(s). Comienza el combate!");
+ 
+        int ronda = 1;
+        boolean huyo = false;
+        while (jugador.estaVivo() && hayVivos(enemigos) && !huyo) {
+            vista.mostrarCombate(jugador, enemigos, ronda);
+            String opcion = vista.menuCombate();
+            boolean turnoUsado = false;
+            if (opcion.equals("1")) turnoUsado = atacar(enemigos);
+            else if (opcion.equals("2")) turnoUsado = juego.usarObjeto();
+            else if (opcion.equals("3")) huyo = true;
+            else vista.msg("Opcion no valida. Intentalo de nuevo.");
+ 
+            if (turnoUsado) {
+                if (hayVivos(enemigos)) turnoEnemigos(enemigos);
+                ronda++;
+            }
+        }
+ 
+        if (huyo) {
+            vista.msg("\nHuyes del combate.");
+        } else if (!jugador.estaVivo()) {
+            vista.msg("\nHas sido derrotado... Despiertas en el campamento con la salud restaurada.");
+            jugador.recuperarSalud();
+        } else {
+            jugador.subirNivel();
+            vista.msg("\nVICTORIA! Subes al nivel " + jugador.getNivel() + " y recuperas toda tu salud ("
+                    + jugador.getSaludMaxima() + ").");
+        }
+    }
+ 
+    private boolean hayVivos(List<Enemigo> enemigos) {
+        for (Enemigo e : enemigos) {
+            if (e.estaVivo()) return true;
+        }
+        return false;
+    }
+ 
+    private boolean atacar(List<Enemigo> enemigos) {
+        int n = vista.leerEntero("Numero del enemigo a atacar: ");
+        if (n < 1 || n > enemigos.size() || !enemigos.get(n - 1).estaVivo()) {
+            vista.msg("Ese enemigo no es valido o ya esta derrotado.");
+            return false;
+        }
+        Enemigo e = enemigos.get(n - 1);
+        Item arma = jugador.getArma();
+        int danio = e.recibirDanio(jugador.atacar());
+        vista.msg(">> Atacas a " + e.getNombre() + " con " + (arma == null ? "tus punos" : arma.getNombre())
+                + " y le causas " + danio + " de dano.");
+        if (!e.estaVivo()) vista.msg(">> " + e.getNombre() + " ha sido derrotado!");
+        return true;
+    }
+ 
+    private void turnoEnemigos(List<Enemigo> enemigos) {
+        vista.msg("\n--- Turno de los enemigos ---");
+        for (Enemigo e : enemigos) {
+            if (!e.estaVivo() || !jugador.estaVivo()) continue;
+            int accion = e.elegirAccion();
+            if (accion == Enemigo.ATACAR) {
+                int danio = e.atacar();
+                jugador.recibirDanio(danio);
+                vista.msg("<< " + e.getNombre() + " te ataca y te causa " + danio + " de dano.");
+            } else if (accion == Enemigo.DEFENDER) {
+                e.defender();
+                vista.msg("<< " + e.getNombre() + " se pone en guardia (recibira menos dano).");
+            } else {
+                vista.msg("<< " + e.getNombre() + " se cura " + e.curarse() + " de salud.");
+            }
+        }
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+ 
+import java.util.Random;
+ 
+public class Enemigo {
+ 
+    public static final String BESTIA = "Bestia", NO_MUERTO = "No-muerto", HUMANOIDE = "Humanoide";
+    public static final int ATACAR = 1, DEFENDER = 2, CURARSE = 3;
+    private static final Random AZAR = new Random();
+ 
+    private String nombre, tipo;
+    private int salud, saludMaxima, nivel;
+    private boolean defendiendo;
+ 
+    public Enemigo(String nombre, int nivel, String tipo) {
+        this.nombre = nombre;
+        this.nivel = nivel;
+        this.tipo = tipo;
+        this.saludMaxima = 20 + nivel * 10;
+        this.salud = saludMaxima;
+    }
+ 
+    public static Enemigo aleatorio(int nivelJugador, int numero) {
+        int nivel = Math.max(1, nivelJugador + AZAR.nextInt(3) - 1);
+        int t = AZAR.nextInt(3);
+        if (t == 0) return new Enemigo("Lobo #" + numero, nivel, BESTIA);
+        if (t == 1) return new Enemigo("Esqueleto #" + numero, nivel, NO_MUERTO);
+        return new Enemigo("Bandido #" + numero, nivel, HUMANOIDE);
+    }
+ 
+    public String getNombre() { return nombre; }
+    public String getTipo() { return tipo; }
+    public int getSalud() { return salud; }
+    public int getSaludMaxima() { return saludMaxima; }
+    public int getNivel() { return nivel; }
+    public boolean estaVivo() { return salud > 0; }
+ 
+    public int elegirAccion() {
+        defendiendo = false; // la defensa dura hasta su siguiente turno
+        int n = AZAR.nextInt(100);
+        if (n < 60) return ATACAR;
+        if (n < 80) return DEFENDER;
+        return salud < saludMaxima ? CURARSE : ATACAR;
+    }
+ 
+    public int atacar() {
+        return 2 + nivel + AZAR.nextInt(4) + (tipo.equals(BESTIA) ? 1 : 0);
+    }
+ 
+    public int recibirDanio(int danio) {
+        int real = defendiendo ? Math.max(1, danio / 2) : danio;
+        salud = Math.max(0, salud - real);
+        return real;
+    }
+ 
+    public void defender() { defendiendo = true; }
+ 
+    public int curarse() {
+        int antes = salud;
+        salud = Math.min(saludMaxima, salud + 8 + nivel * 3);
+        return salud - antes;
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+ 
+public class Item {
+ 
+    public static final String ARMA = "Arma";
+    public static final String POCION = "Pocion";
+ 
+    private String nombre, tipo, descripcion;
+    private int cantidad;
+    private int valor;
+ 
+    public Item(String nombre, int cantidad, String tipo, String descripcion, int valor) {
+        this.nombre = nombre;
+        this.cantidad = cantidad;
+        this.tipo = tipo;
+        this.descripcion = descripcion;
+        this.valor = valor;
+    }
+ 
+    public String getNombre() { return nombre; }
+    public int getCantidad() { return cantidad; }
+    public String getTipo() { return tipo; }
+    public String getDescripcion() { return descripcion; }
+    public int getValor() { return valor; }
+    public boolean esArma() { return tipo.equals(ARMA); }
+    public boolean esPocion() { return tipo.equals(POCION); }
+ 
+    public boolean usar() {
+        if (cantidad <= 0) return false;
+        if (esPocion()) cantidad--;
+        return true;
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+ 
+import java.util.List;
+ 
+public class JuegoControlador {
+ 
+    private Jugador jugador;
+    private Vista vista;
+    private CombateControlador combate;
+ 
+    public JuegoControlador(Jugador jugador, Vista vista) {
+        this.jugador = jugador;
+        this.vista = vista;
+        this.combate = new CombateControlador(jugador, vista, this);
+    }
+ 
+    public void iniciar() {
+        String opcion;
+        do {
+            opcion = vista.menuPrincipal();
+            switch (opcion) {
+                case "1": verInventario(); break;
+                case "2": agregarItem(); break;
+                case "3": eliminarItem(); break;
+                case "4": buscarItem(); break;
+                case "5": vista.mostrarJugador(jugador); break;
+                case "6": usarObjeto(); break;
+                case "7": combate.iniciar(); break;
+                case "0": vista.msg("Saliendo..."); break;
+                default: vista.msg("Opcion no valida. Intentalo de nuevo.");
+            }
+        } while (!opcion.equals("0"));
+    }
+ 
+    private void verInventario() {
+        List<Item> items = jugador.getInventario();
+        if (items.isEmpty()) vista.msg("El inventario esta vacio.");
+        else vista.mostrarInventario(items);
+    }
+ 
+    private void agregarItem() {
+        String nombre = vista.leer("Nombre del item: ");
+        int cantidad = vista.leerEntero("Cantidad: ");
+        int tipo = vista.leerEntero("Tipo (1 = Arma, 2 = Pocion): ");
+        if (tipo != 1 && tipo != 2) {
+            vista.msg("Tipo no valido. No se agrego el item.");
+            return;
+        }
+        int valor = vista.leerEntero(tipo == 1 ? "Dano del arma: " : "Salud que recupera: ");
+        String descripcion = vista.leer("Descripcion: ");
+ 
+        if (nombre.isEmpty() || cantidad <= 0 || valor <= 0) {
+            vista.msg("Nombre, cantidad y valor deben ser validos (cantidad y valor mayores que cero).");
+        } else if (jugador.agregarItem(new Item(nombre, cantidad, tipo == 1 ? Item.ARMA : Item.POCION,
+                descripcion, valor))) {
+            vista.msg("Item agregado: " + nombre);
+        } else {
+            vista.msg("Ya existe un item con ese nombre.");
+        }
+    }
+ 
+    private void eliminarItem() {
+        Item item = elegirItem("Numero del item a eliminar: ");
+        if (item != null && jugador.eliminarItem(item)) vista.msg("Item eliminado: " + item.getNombre());
+    }
+ 
+    private void buscarItem() {
+        Item item = jugador.buscarItem(vista.leer("Nombre del item a buscar: "));
+        if (item == null) vista.msg("No se encontro ningun item con ese nombre.");
+        else vista.mostrarItem("", item);
+    }
+ 
+    private Item elegirItem(String texto) {
+        List<Item> items = jugador.getInventario();
+        if (items.isEmpty()) {
+            vista.msg("El inventario esta vacio.");
+            return null;
+        }
+        vista.mostrarInventario(items);
+        int n = vista.leerEntero(texto);
+        if (n < 1 || n > items.size()) {
+            vista.msg("Numero no valido.");
+            return null;
+        }
+        return items.get(n - 1);
+    }
+ 
+    public boolean usarObjeto() {
+        Item item = elegirItem("Numero del objeto a usar: ");
+        if (item == null) return false;
+        int saludAntes = jugador.getSalud();
+        if (!jugador.usarObjeto(item)) {
+            vista.msg("No quedan unidades de " + item.getNombre() + ".");
+            return false;
+        }
+        if (item.esPocion()) {
+            vista.msg("Usas " + item.getNombre() + " y recuperas " + (jugador.getSalud() - saludAntes)
+                    + " de salud. Unidades restantes: " + item.getCantidad());
+        } else {
+            vista.msg("Equipas " + item.getNombre() + ".");
+        }
+        return true;
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+ 
+import java.util.ArrayList;
+import java.util.List;
+ 
+public class Jugador {
+ 
+    private String nombre;
+    private int salud = 100, saludMaxima = 100, nivel = 1;
+    private List<Item> inventario = new ArrayList<>();
+    private Item arma;
+ 
+    public Jugador(String nombre) { this.nombre = nombre; }
+ 
+    public String getNombre() { return nombre; }
+    public int getSalud() { return salud; }
+    public int getSaludMaxima() { return saludMaxima; }
+    public int getNivel() { return nivel; }
+    public boolean estaVivo() { return salud > 0; }
+    public List<Item> getInventario() { return new ArrayList<>(inventario); }
+ 
+    public Item getArma() {
+        if (arma != null && !inventario.contains(arma)) arma = null;
+        return arma;
+    }
+ 
+    public Item buscarItem(String nombre) {
+        for (Item i : inventario) {
+            if (i.getNombre().equalsIgnoreCase(nombre)) return i;
+        }
+        return null;
+    }
+ 
+    public boolean agregarItem(Item item) {
+        if (buscarItem(item.getNombre()) != null) return false;
+        return inventario.add(item);
+    }
+ 
+    public boolean eliminarItem(Item item) { return inventario.remove(item); }
+ 
+    public int atacar() {
+        Item a = getArma();
+        return (a == null ? 2 : a.getValor()) + nivel;
+    }
+ 
+    public void recibirDanio(int danio) { salud = Math.max(0, salud - danio); }
+ 
+    public boolean usarObjeto(Item item) {
+        if (!item.usar()) return false;
+        if (item.esPocion()) salud = Math.min(saludMaxima, salud + item.getValor());
+        else arma = item;
+        return true;
+    }
+ 
+    public void subirNivel() {
+        nivel++;
+        saludMaxima += 10;
+        salud = saludMaxima;
+    }
+ 
+    public void recuperarSalud() { salud = saludMaxima; }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+ 
+public class Main {
+ 
+    public static void main(String[] args) {
+        Jugador jugador = new Jugador("Aventurero");
+        jugador.agregarItem(new Item("Espada de hierro", 1, Item.ARMA, "Espada basica cuerpo a cuerpo", 12));
+        jugador.agregarItem(new Item("Arco corto", 1, Item.ARMA, "Arco ligero a distancia", 9));
+        jugador.agregarItem(new Item("Pocion de vida", 3, Item.POCION, "Recupera salud al usarla", 30));
+ 
+        new JuegoControlador(jugador, new Vista()).iniciar();
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+ 
+import java.util.List;
+import java.util.Scanner;
+ 
+public class Vista {
+ 
+    private Scanner sc = new Scanner(System.in);
+ 
+    public void msg(String mensaje) { System.out.println(mensaje); }
+ 
+    public String leer(String mensaje) {
+        System.out.print(mensaje);
+        return sc.nextLine().trim();
+    }
+ 
+    public int leerEntero(String mensaje) {
+        while (true) {
+            try {
+                return Integer.parseInt(leer(mensaje));
+            } catch (NumberFormatException e) {
+                msg("Debes escribir un numero entero valido.");
+            }
+        }
+    }
+ 
+    public String menuPrincipal() {
+        msg("\n===== Menu principal =====\n1. Ver inventario\n2. Agregar item\n3. Eliminar item"
+                + "\n4. Buscar item por nombre\n5. Ver estado del jugador\n6. Usar / equipar objeto"
+                + "\n7. Iniciar combate\n0. Salir");
+        return leer("Selecciona una opcion: ");
+    }
+ 
+    public String menuCombate() {
+        msg("\nQue quieres hacer?\n1. Atacar\n2. Usar objeto\n3. Huir");
+        return leer("Selecciona una opcion: ");
+    }
+ 
+    public void mostrarInventario(List<Item> items) {
+        msg("Inventario:");
+        for (int i = 0; i < items.size(); i++) mostrarItem(i + 1 + ". ", items.get(i));
+    }
+ 
+    public void mostrarItem(String prefijo, Item it) {
+        msg(prefijo + it.getNombre() + " - " + it.getTipo() + " - cantidad: " + it.getCantidad()
+                + (it.esArma() ? " - dano: " : " - cura: ") + it.getValor() + " - " + it.getDescripcion());
+    }
+ 
+    public void mostrarJugador(Jugador j) {
+        Item arma = j.getArma();
+        msg("Jugador: " + j.getNombre() + " | Nivel " + j.getNivel() + " | Salud " + j.getSalud() + "/"
+                + j.getSaludMaxima() + " | Arma: " + (arma == null ? "ninguna" : arma.getNombre())
+                + " | Dano por ataque: " + j.atacar());
+    }
+ 
+    public void mostrarCombate(Jugador j, List<Enemigo> enemigos, int ronda) {
+        msg("\n=============== RONDA " + ronda + " ===============");
+        Item arma = j.getArma();
+        msg(j.getNombre() + " (Nivel " + j.getNivel() + ") " + barra(j.getSalud(), j.getSaludMaxima()) + " "
+                + j.getSalud() + "/" + j.getSaludMaxima() + " - Arma: " + (arma == null ? "Punos" : arma.getNombre()));
+        msg("--------------- Enemigos ---------------");
+        for (int i = 0; i < enemigos.size(); i++) {
+            Enemigo e = enemigos.get(i);
+            if (e.estaVivo()) {
+                msg((i + 1) + ". " + e.getNombre() + " [" + e.getTipo() + ", Nivel " + e.getNivel() + "] "
+                        + barra(e.getSalud(), e.getSaludMaxima()) + " " + e.getSalud() + "/" + e.getSaludMaxima());
+            } else {
+                msg((i + 1) + ". " + e.getNombre() + " (derrotado)");
+            }
+        }
+    }
+ 
+    private String barra(int salud, int maxima) {
+        int llenos = (int) Math.ceil(salud * 10.0 / maxima);
+        return "[" + "#".repeat(llenos) + "-".repeat(10 - llenos) + "]";
+    }
+}
 
