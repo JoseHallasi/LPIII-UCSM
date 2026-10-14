@@ -560,3 +560,1570 @@ public class PruebaJFileChooser {
         aplicacion.setVisible(true);
     }
 }
+
+
+
+
+----------------------------------------EJERCICIOS --------------------------------------------------------------------------------------
+
+1	Gestor de Personas de Videojuego:
+
+  Java — Código Fuente
+package Ejercicio1;
+
+public class Personaje {
+ 
+    private String nombre;
+    private int vida;
+    private int ataque;
+    private int defensa;
+    private int alcance;
+ 
+    public Personaje(String nombre, int vida, int ataque, int defensa, int alcance) {
+        setNombre(nombre);
+        setVida(vida);
+        setAtaque(ataque);
+        setDefensa(defensa);
+        setAlcance(alcance);
+    }
+    
+    public String getNombre() {
+        return nombre;
+    }
+    public int getVida() {
+        return vida;
+    }
+    public int getAtaque() {
+        return ataque;
+    }
+    public int getDefensa() {
+        return defensa;
+    }
+    public int getAlcance() {
+        return alcance;
+    }
+    
+    public void setNombre(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del personaje no puede estar vacío.");
+        }
+        if (nombre.contains(";")) {
+            throw new IllegalArgumentException("El nombre no puede contener el caracter ';'.");
+        }
+        this.nombre = nombre.trim();
+    }
+ 
+    public void setVida(int vida) {
+        this.vida = validarPositivo(vida, "vida");
+    }
+ 
+    public void setAtaque(int ataque) {
+        this.ataque = validarPositivo(ataque, "ataque");
+    }
+ 
+    public void setDefensa(int defensa) {
+        this.defensa = validarPositivo(defensa, "defensa");
+    }
+ 
+    public void setAlcance(int alcance) {
+        this.alcance = validarPositivo(alcance, "alcance");
+    }
+ 
+    private int validarPositivo(int valor, String campo) {
+        if (valor <= 0) {
+            throw new IllegalArgumentException(
+                    "El valor de " + campo + " debe ser un entero mayor que cero (recibido: " + valor + ").");
+        }
+        return valor;
+    }
+ 
+    public String toLinea() {
+        return nombre + ";" + vida + ";" + ataque + ";" + defensa + ";" + alcance;
+    }
+ 
+    public static Personaje desdeLinea(String linea) {
+        String[] partes = linea.split(";");
+        if (partes.length != 5) {
+            throw new IllegalArgumentException("Se esperaban 5 campos separados por ';' y hay " + partes.length + ".");
+        }
+        try {
+            return new Personaje(
+                    partes[0],
+                    Integer.parseInt(partes[1].trim()),
+                    Integer.parseInt(partes[2].trim()),
+                    Integer.parseInt(partes[3].trim()),
+                    Integer.parseInt(partes[4].trim()));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Los atributos deben ser números enteros.");
+        }
+    }
+ 
+    @Override
+    public String toString() {
+        return String.format("%-12s | Vida: %-3d | Ataque: %-3d | Defensa: %-3d | Alcance: %-3d",
+                nombre, vida, ataque, defensa, alcance);
+    }
+}
+
+  Java — Código Fuente
+package Ejercicio1;
+
+import java.util.Scanner;
+
+public class Main {
+ 
+    private static final Scanner sc = new Scanner(System.in);
+ 
+    public static void main(String[] args) {
+        Gestor gestor = new Gestor("personajes.txt");
+ 
+        int opcion;
+        do {
+            mostrarMenu();
+            opcion = leerEntero("Elige una opción: ");
+ 
+            switch (opcion) {
+                case 1:
+                    gestor.mostrar();
+                    break;
+                case 2:
+                    anadirPersonaje(gestor);
+                    break;
+                case 3:
+                    modificarPersonaje(gestor);
+                    break;
+                case 4:
+                    borrarPersonaje(gestor);
+                    break;
+                case 5:
+                    System.out.println("Cambios guardados. ¡Hasta pronto!");
+                    break;
+                default:
+                    System.out.println("Opción no válida. Elige un número del 1 al 5.");
+            }
+        } while (opcion != 5);
+ 
+        sc.close();
+    }
+ 
+    private static void mostrarMenu() {
+        System.out.println("\n===== GESTOR DE PERSONAJES =====");
+        System.out.println("1. Mostrar personajes");
+        System.out.println("2. Añadir personaje");
+        System.out.println("3. Modificar personaje");
+        System.out.println("4. Borrar personaje");
+        System.out.println("5. Salir");
+    }
+  
+    private static void anadirPersonaje(Gestor gestor) {
+        System.out.print("Nombre del nuevo personaje: ");
+        String nombre = sc.nextLine().trim();
+ 
+        if (gestor.buscar(nombre) != null) {
+            System.out.println("Error: el personaje '" + nombre + "' ya existe. No se creará.");
+            return;
+        }
+ 
+        int vida = leerEntero("Vida: ");
+        int ataque = leerEntero("Ataque: ");
+        int defensa = leerEntero("Defensa: ");
+        int alcance = leerEntero("Alcance: ");
+ 
+        try {
+            Personaje nuevo = new Personaje(nombre, vida, ataque, defensa, alcance);
+            if (gestor.anadir(nuevo)) {
+                System.out.println("Personaje '" + nombre + "' añadido correctamente.");
+            } else {
+                System.out.println("No se pudo añadir el personaje.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+ 
+    private static void modificarPersonaje(Gestor gestor) {
+        System.out.print("Nombre del personaje a modificar: ");
+        String nombre = sc.nextLine().trim();
+ 
+        Personaje actual = gestor.buscar(nombre);
+        if (actual == null) {
+            System.out.println("Error: no existe el personaje '" + nombre + "'.");
+            return;
+        }
+ 
+        System.out.println("Datos actuales: " + actual);
+        int vida = leerEntero("Nueva vida: ");
+        int ataque = leerEntero("Nuevo ataque: ");
+        int defensa = leerEntero("Nueva defensa: ");
+        int alcance = leerEntero("Nuevo alcance: ");
+ 
+        try {
+            if (gestor.modificar(nombre, vida, ataque, defensa, alcance)) {
+                System.out.println("Personaje '" + actual.getNombre() + "' modificado correctamente.");
+            } else {
+                System.out.println("No se pudo modificar el personaje.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage() + " No se hicieron cambios.");
+        }
+    }
+ 
+    private static void borrarPersonaje(Gestor gestor) {
+        System.out.print("Nombre del personaje a borrar: ");
+        String nombre = sc.nextLine().trim();
+ 
+        if (gestor.borrar(nombre)) {
+            System.out.println("Personaje '" + nombre + "' borrado correctamente.");
+        } else {
+            System.out.println("Error: no existe el personaje '" + nombre + "'.");
+        }
+    }
+  
+    private static int leerEntero(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String texto = sc.nextLine().trim();
+            try {
+                return Integer.parseInt(texto);
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada no válida. Escribe un número entero.");
+            }
+        }
+    }
+}
+
+  Java — Código Fuente
+package Ejercicio1;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+ 
+public class Gestor {
+ 
+    private final List<Personaje> personajes;
+    private final String rutaArchivo;
+ 
+    public Gestor(String rutaArchivo) {
+        this.rutaArchivo = rutaArchivo;
+        this.personajes = new ArrayList<>();
+ 
+        File archivo = new File(rutaArchivo);
+        if (archivo.exists()) {
+            cargar();
+        } else {
+            System.out.println("El archivo '" + rutaArchivo + "' no existe. Se creará con los personajes iniciales.");
+            cargarPersonajesIniciales();
+            guardar();
+        }
+    }
+ 
+    private void cargarPersonajesIniciales() {
+        personajes.add(new Personaje("Caballero", 4, 2, 4, 2));
+        personajes.add(new Personaje("Guerrero", 2, 4, 2, 4));
+        personajes.add(new Personaje("Arquero", 2, 4, 1, 8));
+    }
+  
+    private void cargar() {
+        personajes.clear();
+        try (BufferedReader lector = new BufferedReader(new FileReader(rutaArchivo))) {
+            String linea;
+            int numeroLinea = 0;
+            while ((linea = lector.readLine()) != null) {
+                numeroLinea++;
+                if (linea.trim().isEmpty()) {
+                    continue;
+                }
+                try {
+                    Personaje p = Personaje.desdeLinea(linea);
+                    if (buscarIndice(p.getNombre()) == -1) {
+                        personajes.add(p);
+                    } else {
+                        System.out.println("Línea " + numeroLinea + " ignorada: personaje repetido (" + p.getNombre() + ").");
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Línea " + numeroLinea + " ignorada: " + e.getMessage());
+                }
+            }
+            System.out.println("Se cargaron " + personajes.size() + " personaje(s) desde '" + rutaArchivo + "'.");
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+        }
+    }
+ 
+    private boolean guardar() {
+        try (PrintWriter escritor = new PrintWriter(rutaArchivo)) {
+            for (Personaje p : personajes) {
+                escritor.println(p.toLinea());
+            }
+            return true;
+        } catch (IOException e) {
+            System.out.println("Error al guardar el archivo: " + e.getMessage());
+            return false;
+        }
+    }
+ 
+    private int buscarIndice(String nombre) {
+        for (int i = 0; i < personajes.size(); i++) {
+            if (personajes.get(i).getNombre().equalsIgnoreCase(nombre.trim())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+ 
+    public boolean anadir(Personaje nuevo) {
+        if (buscarIndice(nuevo.getNombre()) != -1) {
+            return false;
+        }
+        personajes.add(nuevo);
+        return guardar();
+    }
+ 
+    public boolean modificar(String nombre, int vida, int ataque, int defensa, int alcance) {
+        int indice = buscarIndice(nombre);
+        if (indice == -1) {
+            return false; 
+        }
+        Personaje actual = personajes.get(indice);
+        personajes.set(indice, new Personaje(actual.getNombre(), vida, ataque, defensa, alcance));
+        return guardar();
+    }
+ 
+    public boolean borrar(String nombre) {
+        int indice = buscarIndice(nombre);
+        if (indice == -1) {
+            return false;
+        }
+        personajes.remove(indice);
+        return guardar();
+    }
+ 
+    public Personaje buscar(String nombre) {
+        int indice = buscarIndice(nombre);
+        return (indice == -1) ? null : personajes.get(indice);
+    }
+ 
+    public void mostrar() {
+        if (personajes.isEmpty()) {
+            System.out.println("No hay personajes registrados.");
+            return;
+        }
+        System.out.println("\n=== PERSONAJES (" + personajes.size() + ") ===");
+        for (Personaje p : personajes) {
+            System.out.println(p);
+        }
+    }
+}
+
+
+2.	Nuevas funcionalidades:
+
+Java — Código Fuente
+package Ejercicio2;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
+ 
+public class Gestor {
+ 
+    public static final String[] ATRIBUTOS = {"vida", "ataque", "defensa", "alcance"};
+ 
+    public static final String[] CRITERIOS_ORDEN = {"nombre", "nivel", "vida", "ataque", "defensa", "alcance"};
+ 
+    private static final String[] NOMBRES_ALEATORIOS = {
+        "Mago", "Ladron", "Paladin", "Berserker", "Hechicero",
+        "Cazador", "Monje", "Samurai", "Druida", "Pirata"
+    };
+ 
+    private final List<Personaje> personajes;
+    private final String rutaArchivo;
+    private final Random azar = new Random();
+ 
+    public Gestor(String rutaArchivo) {
+        this.rutaArchivo = rutaArchivo;
+        this.personajes = new ArrayList<>();
+ 
+        File archivo = new File(rutaArchivo);
+        if (archivo.exists()) {
+            cargar();
+        } else {
+            System.out.println("El archivo '" + rutaArchivo + "' no existe. Se creará con los personajes iniciales.");
+            personajes.add(new Personaje("Caballero", 4, 2, 4, 2));
+            personajes.add(new Personaje("Guerrero", 2, 4, 2, 4));
+            personajes.add(new Personaje("Arquero", 2, 4, 1, 8));
+            guardar();
+        }
+    }
+ 
+    private void cargar() {
+        personajes.clear();
+        try (BufferedReader lector = new BufferedReader(new FileReader(rutaArchivo))) {
+            String linea;
+            int numeroLinea = 0;
+            while ((linea = lector.readLine()) != null) {
+                numeroLinea++;
+                if (linea.trim().isEmpty()) {
+                    continue; 
+                }
+                try {
+                    Personaje p = Personaje.desdeLinea(linea);
+                    if (buscarIndice(p.getNombre()) == -1) {
+                        personajes.add(p);
+                    } else {
+                        System.out.println("Línea " + numeroLinea + " ignorada: personaje repetido (" + p.getNombre() + ").");
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Línea " + numeroLinea + " ignorada: " + e.getMessage());
+                }
+            }
+            System.out.println("Se cargaron " + personajes.size() + " personaje(s) desde '" + rutaArchivo + "'.");
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+        }
+    }
+ 
+    private boolean guardar() {
+        try (PrintWriter escritor = new PrintWriter(rutaArchivo)) {
+            for (Personaje p : personajes) {
+                escritor.println(p.toLinea());
+            }
+            return true;
+        } catch (IOException e) {
+            System.out.println("Error al guardar el archivo: " + e.getMessage());
+            return false;
+        }
+    }
+ 
+    private int buscarIndice(String nombre) {
+        for (int i = 0; i < personajes.size(); i++) {
+            if (personajes.get(i).getNombre().equalsIgnoreCase(nombre.trim())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+ 
+    public Personaje buscar(String nombre) {
+        int indice = buscarIndice(nombre);
+        return (indice == -1) ? null : personajes.get(indice);
+    }
+ 
+    public boolean anadir(Personaje nuevo) {
+        if (buscarIndice(nuevo.getNombre()) != -1) {
+            return false;
+        }
+        personajes.add(nuevo);
+        return guardar();
+    }
+ 
+    public boolean modificar(String nombre, int vida, int ataque, int defensa, int alcance) {
+        int indice = buscarIndice(nombre);
+        if (indice == -1) {
+            return false;
+        }
+        Personaje actual = personajes.get(indice);
+        personajes.set(indice, new Personaje(actual.getNombre(), vida, ataque, defensa, alcance, actual.getNivel()));
+        return guardar();
+    }
+ 
+    public boolean borrar(String nombre) {
+        int indice = buscarIndice(nombre);
+        if (indice == -1) {
+            return false;
+        }
+        personajes.remove(indice);
+        return guardar();
+    }
+ 
+    public void mostrar() {
+        imprimir(personajes, "PERSONAJES");
+    }
+ 
+    public static void imprimir(List<Personaje> lista, String titulo) {
+        if (lista.isEmpty()) {
+            System.out.println("No hay personajes para mostrar.");
+            return;
+        }
+        System.out.println("\n=== " + titulo + " (" + lista.size() + ") ===");
+        for (Personaje p : lista) {
+            System.out.println(p);
+        }
+    }
+ 
+    public List<Personaje> ordenarPor(String criterio, boolean descendente) {
+        Comparator<Personaje> comparador;
+        if (criterio.equalsIgnoreCase("nombre")) {
+            comparador = (a, b) -> a.getNombre().compareToIgnoreCase(b.getNombre());
+        } else {
+            comparador = (a, b) -> Integer.compare(a.getValor(criterio), b.getValor(criterio));
+        }
+        if (descendente) {
+            comparador = comparador.reversed();
+        }
+        List<Personaje> copia = new ArrayList<>(personajes);
+        copia.sort(comparador);
+        return copia;
+    }
+ 
+    public List<Personaje> filtrarMinimo(String atributo, int minimo) {
+        List<Personaje> resultado = new ArrayList<>();
+        for (Personaje p : personajes) {
+            if (p.getValor(atributo) >= minimo) {
+                resultado.add(p);
+            }
+        }
+        resultado.sort((a, b) -> Integer.compare(b.getValor(atributo), a.getValor(atributo)));
+        return resultado;
+    }
+ 
+    public int cargarAleatorios(int cantidad) {
+        int anadidos = 0;
+        for (int i = 0; i < cantidad; i++) {
+            String base = NOMBRES_ALEATORIOS[azar.nextInt(NOMBRES_ALEATORIOS.length)];
+            String nombre = base;
+            int sufijo = 2;
+            while (buscarIndice(nombre) != -1) {
+                nombre = base + sufijo;
+                sufijo++;
+            }
+            personajes.add(new Personaje(nombre,
+                    azar.nextInt(10) + 1,
+                    azar.nextInt(10) + 1,
+                    azar.nextInt(10) + 1,
+                    azar.nextInt(10) + 1));
+            anadidos++;
+        }
+        if (anadidos > 0) {
+            guardar();
+        }
+        return anadidos;
+    }
+ 
+    public boolean actualizarAtributo(String nombre, String atributo, int valor) {
+        Personaje p = buscar(nombre);
+        if (p == null) {
+            return false;
+        }
+        p.setValor(atributo, valor); 
+        return guardar();
+    }
+ 
+    public void mostrarEstadisticas() {
+        if (personajes.isEmpty()) {
+            System.out.println("No hay personajes para calcular estadísticas.");
+            return;
+        }
+ 
+        System.out.println("\n=== ESTADÍSTICAS ===");
+        System.out.println("Total de personajes: " + personajes.size());
+ 
+        String[] campos = {"nivel", "vida", "ataque", "defensa", "alcance"};
+        for (String campo : campos) {
+            int suma = 0;
+            Personaje mejor = personajes.get(0);
+            for (Personaje p : personajes) {
+                suma += p.getValor(campo);
+                if (p.getValor(campo) > mejor.getValor(campo)) {
+                    mejor = p;
+                }
+            }
+            double promedio = (double) suma / personajes.size();
+            System.out.printf("%-8s -> promedio: %.2f | máximo: %d (%s)%n",
+                    campo, promedio, mejor.getValor(campo), mejor.getNombre());
+        }
+    }
+ 
+    public int[] importar(String ruta) throws IOException {
+        int importados = 0;
+        int repetidos = 0;
+        int invalidos = 0;
+ 
+        try (BufferedReader lector = new BufferedReader(new FileReader(ruta))) {
+            String linea;
+            while ((linea = lector.readLine()) != null) {
+                if (linea.trim().isEmpty()) {
+                    continue;
+                }
+                try {
+                    Personaje p = Personaje.desdeLinea(linea);
+                    if (buscarIndice(p.getNombre()) == -1) {
+                        personajes.add(p);
+                        importados++;
+                    } else {
+                        repetidos++;
+                    }
+                } catch (IllegalArgumentException e) {
+                    invalidos++;
+                    System.out.println("Línea inválida ignorada (" + linea + "): " + e.getMessage());
+                }
+            }
+        }
+ 
+        if (importados > 0) {
+            guardar();
+        }
+        return new int[] {importados, repetidos, invalidos};
+    }
+ 
+    public Personaje subirNivel(String nombre, int niveles) {
+        if (niveles <= 0) {
+            throw new IllegalArgumentException("La cantidad de niveles debe ser mayor que cero.");
+        }
+        Personaje p = buscar(nombre);
+        if (p == null) {
+            return null;
+        }
+        for (int i = 0; i < niveles; i++) {
+            p.subirNivel();
+        }
+        guardar();
+        return p;
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Scanner;
+ 
+public class Main {
+ 
+    private static final Scanner sc = new Scanner(System.in);
+ 
+    public static void main(String[] args) {
+        Gestor gestor = new Gestor("personajes.txt");
+ 
+        System.out.print("¿Deseas añadir personajes aleatorios al iniciar? (s/n): ");
+        if (sc.nextLine().trim().equalsIgnoreCase("s")) {
+            cargarAleatorios(gestor);
+        }
+ 
+        int opcion;
+        do {
+            mostrarMenu();
+            opcion = leerEntero("Elige una opción: ");
+ 
+            switch (opcion) {
+                case 1:
+                    gestor.mostrar();
+                    break;
+                case 2:
+                    anadirPersonaje(gestor);
+                    break;
+                case 3:
+                    modificarPersonaje(gestor);
+                    break;
+                case 4:
+                    borrarPersonaje(gestor);
+                    break;
+                case 5:
+                    ordenarPersonajes(gestor);
+                    break;
+                case 6:
+                    filtrarPersonajes(gestor);
+                    break;
+                case 7:
+                    actualizarAtributo(gestor);
+                    break;
+                case 8:
+                    gestor.mostrarEstadisticas();
+                    break;
+                case 9:
+                    importarPersonajes(gestor);
+                    break;
+                case 10:
+                    cargarAleatorios(gestor);
+                    break;
+                case 11:
+                    subirNivel(gestor);
+                    break;
+                case 0:
+                    System.out.println("Cambios guardados. ¡Hasta pronto!");
+                    break;
+                default:
+                    System.out.println("Opción no válida. Elige un número del 0 al 11.");
+            }
+        } while (opcion != 0);
+ 
+        sc.close();
+    }
+ 
+    private static void mostrarMenu() {
+        System.out.println("\n===== GESTOR DE PERSONAJES =====");
+        System.out.println(" 1. Mostrar personajes");
+        System.out.println(" 2. Añadir personaje");
+        System.out.println(" 3. Modificar personaje (todos los atributos)");
+        System.out.println(" 4. Borrar personaje");
+        System.out.println(" 5. Ordenar personajes por atributo");
+        System.out.println(" 6. Filtrar personajes por valor mínimo");
+        System.out.println(" 7. Actualizar un solo atributo");
+        System.out.println(" 8. Mostrar estadísticas");
+        System.out.println(" 9. Importar personajes desde un archivo");
+        System.out.println("10. Cargar personajes aleatorios");
+        System.out.println("11. Subir de nivel a un personaje");
+        System.out.println(" 0. Salir");
+    }
+ 
+    private static void anadirPersonaje(Gestor gestor) {
+        System.out.print("Nombre del nuevo personaje: ");
+        String nombre = sc.nextLine().trim();
+ 
+        if (gestor.buscar(nombre) != null) {
+            System.out.println("Error: el personaje '" + nombre + "' ya existe. No se creará.");
+            return;
+        }
+ 
+        int vida = leerEntero("Vida: ");
+        int ataque = leerEntero("Ataque: ");
+        int defensa = leerEntero("Defensa: ");
+        int alcance = leerEntero("Alcance: ");
+ 
+        try {
+            if (gestor.anadir(new Personaje(nombre, vida, ataque, defensa, alcance))) {
+                System.out.println("Personaje '" + nombre + "' añadido correctamente (nivel 1).");
+            } else {
+                System.out.println("No se pudo añadir el personaje.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+ 
+    private static void modificarPersonaje(Gestor gestor) {
+        System.out.print("Nombre del personaje a modificar: ");
+        String nombre = sc.nextLine().trim();
+ 
+        Personaje actual = gestor.buscar(nombre);
+        if (actual == null) {
+            System.out.println("Error: no existe el personaje '" + nombre + "'.");
+            return;
+        }
+ 
+        System.out.println("Datos actuales: " + actual);
+        int vida = leerEntero("Nueva vida: ");
+        int ataque = leerEntero("Nuevo ataque: ");
+        int defensa = leerEntero("Nueva defensa: ");
+        int alcance = leerEntero("Nuevo alcance: ");
+ 
+        try {
+            if (gestor.modificar(nombre, vida, ataque, defensa, alcance)) {
+                System.out.println("Personaje '" + actual.getNombre() + "' modificado correctamente.");
+            } else {
+                System.out.println("No se pudo modificar el personaje.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage() + " No se hicieron cambios.");
+        }
+    }
+ 
+    private static void borrarPersonaje(Gestor gestor) {
+        System.out.print("Nombre del personaje a borrar: ");
+        String nombre = sc.nextLine().trim();
+ 
+        if (gestor.borrar(nombre)) {
+            System.out.println("Personaje '" + nombre + "' borrado correctamente.");
+        } else {
+            System.out.println("Error: no existe el personaje '" + nombre + "'.");
+        }
+    }
+ 
+    private static void ordenarPersonajes(Gestor gestor) {
+        String criterio = elegirOpcion("Ordenar por:", Gestor.CRITERIOS_ORDEN);
+        System.out.print("¿Orden descendente (mayor a menor)? (s/n): ");
+        boolean descendente = sc.nextLine().trim().equalsIgnoreCase("s");
+ 
+        List<Personaje> ordenados = gestor.ordenarPor(criterio, descendente);
+        Gestor.imprimir(ordenados, "ORDENADOS POR " + criterio.toUpperCase() + (descendente ? " (DESC)" : " (ASC)"));
+    }
+ 
+    private static void filtrarPersonajes(Gestor gestor) {
+        String atributo = elegirOpcion("Filtrar por atributo:", new String[] {"nivel", "vida", "ataque", "defensa", "alcance"});
+        int minimo = leerEntero("Valor mínimo de " + atributo + ": ");
+ 
+        List<Personaje> filtrados = gestor.filtrarMinimo(atributo, minimo);
+        Gestor.imprimir(filtrados, "PERSONAJES CON " + atributo.toUpperCase() + " >= " + minimo);
+    }
+ 
+    private static void actualizarAtributo(Gestor gestor) {
+        System.out.print("Nombre del personaje: ");
+        String nombre = sc.nextLine().trim();
+ 
+        Personaje actual = gestor.buscar(nombre);
+        if (actual == null) {
+            System.out.println("Error: no existe el personaje '" + nombre + "'.");
+            return;
+        }
+ 
+        System.out.println("Datos actuales: " + actual);
+        String atributo = elegirOpcion("¿Qué atributo deseas actualizar?", Gestor.ATRIBUTOS);
+        int valor = leerEntero("Nuevo valor de " + atributo + ": ");
+ 
+        try {
+            if (gestor.actualizarAtributo(nombre, atributo, valor)) {
+                System.out.println("Se actualizó " + atributo + " de '" + actual.getNombre() + "' a " + valor + ".");
+            } else {
+                System.out.println("No se pudo actualizar el atributo.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage() + " No se hicieron cambios.");
+        }
+    }
+ 
+    private static void importarPersonajes(Gestor gestor) {
+        System.out.println("El archivo debe tener una línea por personaje: nombre;vida;ataque;defensa;alcance[;nivel]");
+        System.out.print("Ruta del archivo a importar: ");
+        String ruta = sc.nextLine().trim();
+ 
+        try {
+            int[] resultado = gestor.importar(ruta);
+            System.out.println("Importación terminada: " + resultado[0] + " importado(s), "
+                    + resultado[1] + " repetido(s), " + resultado[2] + " línea(s) inválida(s).");
+        } catch (IOException e) {
+            System.out.println("Error: no se pudo leer el archivo '" + ruta + "' (" + e.getMessage() + ").");
+        }
+    }
+ 
+    private static void cargarAleatorios(Gestor gestor) {
+        int cantidad = leerEntero("¿Cuántos personajes aleatorios quieres añadir?: ");
+        if (cantidad <= 0) {
+            System.out.println("La cantidad debe ser mayor que cero. No se añadió nada.");
+            return;
+        }
+        int anadidos = gestor.cargarAleatorios(cantidad);
+        System.out.println("Se añadieron " + anadidos + " personaje(s) aleatorio(s).");
+    }
+ 
+    private static void subirNivel(Gestor gestor) {
+        System.out.print("Nombre del personaje: ");
+        String nombre = sc.nextLine().trim();
+ 
+        Personaje p = gestor.buscar(nombre);
+        if (p == null) {
+            System.out.println("Error: no existe el personaje '" + nombre + "'.");
+            return;
+        }
+ 
+        int niveles = leerEntero("¿Cuántos niveles quiere subir?: ");
+        System.out.println("Antes:   " + p);
+        try {
+            gestor.subirNivel(nombre, niveles);
+            System.out.println("Después: " + p);
+            System.out.println("Cada nivel da +" + Personaje.BONUS_VIDA + " vida, +" + Personaje.BONUS_ATAQUE
+                    + " ataque, +" + Personaje.BONUS_DEFENSA + " defensa y +" + Personaje.BONUS_ALCANCE + " alcance.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+ 
+    private static String elegirOpcion(String titulo, String[] opciones) {
+        System.out.println(titulo);
+        for (int i = 0; i < opciones.length; i++) {
+            System.out.println("  " + (i + 1) + ". " + opciones[i]);
+        }
+        while (true) {
+            int eleccion = leerEntero("Elige (1-" + opciones.length + "): ");
+            if (eleccion >= 1 && eleccion <= opciones.length) {
+                return opciones[eleccion - 1];
+            }
+            System.out.println("Opción fuera de rango.");
+        }
+    }
+ 
+    private static int leerEntero(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String texto = sc.nextLine().trim();
+            try {
+                return Integer.parseInt(texto);
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada no válida. Escribe un número entero.");
+            }
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+
+public class Personaje {
+	 
+    public static final int BONUS_VIDA = 2;
+    public static final int BONUS_ATAQUE = 1;
+    public static final int BONUS_DEFENSA = 1;
+    public static final int BONUS_ALCANCE = 1;
+ 
+    private String nombre;
+    private int vida;
+    private int ataque;
+    private int defensa;
+    private int alcance;
+    private int nivel;
+ 
+    public Personaje(String nombre, int vida, int ataque, int defensa, int alcance) {
+        this(nombre, vida, ataque, defensa, alcance, 1);
+    }
+ 
+    public Personaje(String nombre, int vida, int ataque, int defensa, int alcance, int nivel) {
+        setNombre(nombre);
+        setVida(vida);
+        setAtaque(ataque);
+        setDefensa(defensa);
+        setAlcance(alcance);
+        setNivel(nivel);
+    }
+ 
+    public String getNombre() {
+        return nombre;
+    }
+ 
+    public int getVida() {
+        return vida;
+    }
+ 
+    public int getAtaque() {
+        return ataque;
+    }
+ 
+    public int getDefensa() {
+        return defensa;
+    }
+ 
+    public int getAlcance() {
+        return alcance;
+    }
+ 
+    public int getNivel() {
+        return nivel;
+    }
+ 
+    public void setNombre(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del personaje no puede estar vacío.");
+        }
+        if (nombre.contains(";")) {
+            throw new IllegalArgumentException("El nombre no puede contener el caracter ';'.");
+        }
+        this.nombre = nombre.trim();
+    }
+ 
+    public void setVida(int vida) {
+        this.vida = validarPositivo(vida, "vida");
+    }
+ 
+    public void setAtaque(int ataque) {
+        this.ataque = validarPositivo(ataque, "ataque");
+    }
+ 
+    public void setDefensa(int defensa) {
+        this.defensa = validarPositivo(defensa, "defensa");
+    }
+ 
+    public void setAlcance(int alcance) {
+        this.alcance = validarPositivo(alcance, "alcance");
+    }
+ 
+    public void setNivel(int nivel) {
+        this.nivel = validarPositivo(nivel, "nivel");
+    }
+ 
+    private int validarPositivo(int valor, String campo) {
+        if (valor <= 0) {
+            throw new IllegalArgumentException(
+                    "El valor de " + campo + " debe ser un entero mayor que cero (recibido: " + valor + ").");
+        }
+        return valor;
+    }
+ 
+    public int getValor(String atributo) {
+        switch (atributo.toLowerCase()) {
+            case "vida":
+                return vida;
+            case "ataque":
+                return ataque;
+            case "defensa":
+                return defensa;
+            case "alcance":
+                return alcance;
+            case "nivel":
+                return nivel;
+            default:
+                throw new IllegalArgumentException("Atributo desconocido: " + atributo);
+        }
+    }
+ 
+    public void setValor(String atributo, int valor) {
+        switch (atributo.toLowerCase()) {
+            case "vida":
+                setVida(valor);
+                break;
+            case "ataque":
+                setAtaque(valor);
+                break;
+            case "defensa":
+                setDefensa(valor);
+                break;
+            case "alcance":
+                setAlcance(valor);
+                break;
+            default:
+                throw new IllegalArgumentException("Atributo no modificable: " + atributo);
+        }
+    }
+ 
+    public void subirNivel() {
+        nivel++;
+        vida += BONUS_VIDA;
+        ataque += BONUS_ATAQUE;
+        defensa += BONUS_DEFENSA;
+        alcance += BONUS_ALCANCE;
+    }
+ 
+    public String toLinea() {
+        return nombre + ";" + vida + ";" + ataque + ";" + defensa + ";" + alcance + ";" + nivel;
+    }
+ 
+    public static Personaje desdeLinea(String linea) {
+        String[] partes = linea.split(";");
+        if (partes.length != 5 && partes.length != 6) {
+            throw new IllegalArgumentException(
+                    "Se esperaban 5 o 6 campos separados por ';' y hay " + partes.length + ".");
+        }
+        try {
+            int nivel = (partes.length == 6) ? Integer.parseInt(partes[5].trim()) : 1;
+            return new Personaje(
+                    partes[0],
+                    Integer.parseInt(partes[1].trim()),
+                    Integer.parseInt(partes[2].trim()),
+                    Integer.parseInt(partes[3].trim()),
+                    Integer.parseInt(partes[4].trim()),
+                    nivel);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Los atributos deben ser números enteros.");
+        }
+    }
+ 
+    @Override
+    public String toString() {
+        return String.format("%-12s | Nivel: %-2d | Vida: %-3d | Ataque: %-3d | Defensa: %-3d | Alcance: %-3d",
+                nombre, nivel, vida, ataque, defensa, alcance);
+    }
+}
+
+
+3.	Datos de Empleados con Modelo Vista Controlador:
+
+Java — Código Fuente
+package Ejercicio3;
+
+import java.io.IOException;
+import java.util.List;
+ 
+public class ControladorEmpleados {
+ 
+    private final ModeloEmpleados modelo;
+    private final VistaEmpleados vista;
+ 
+    public ControladorEmpleados(ModeloEmpleados modelo, VistaEmpleados vista) {
+        this.modelo = modelo;
+        this.vista = vista;
+    }
+ 
+    public void iniciar() {
+        listarEmpleados();
+ 
+        int opcion;
+        do {
+            vista.mostrarMenu();
+            opcion = vista.leerEntero("Elige una opción: ");
+ 
+            switch (opcion) {
+                case 1:
+                    listarEmpleados();
+                    break;
+                case 2:
+                    agregarEmpleado();
+                    break;
+                case 3:
+                    buscarEmpleado();
+                    break;
+                case 4:
+                    eliminarEmpleado();
+                    break;
+                case 5:
+                    vista.mostrarMensaje("Programa finalizado. ¡Hasta pronto!");
+                    break;
+                default:
+                    vista.mostrarError("Opción no válida. Elige un número del 1 al 5.");
+            }
+        } while (opcion != 5);
+ 
+        vista.cerrar();
+    }
+  
+    private void listarEmpleados() {
+        try {
+            List<Empleado> empleados = modelo.leerEmpleados();
+            vista.mostrarEmpleados(empleados);
+        } catch (IOException e) {
+            vista.mostrarError("No se pudo leer el archivo de empleados: " + e.getMessage());
+        }
+    }
+ 
+    private void agregarEmpleado() {
+        int numero = vista.leerEntero("Número del empleado: ");
+        String nombre = vista.leerTexto("Nombre: ");
+        double sueldo = vista.leerDecimal("Sueldo: ");
+ 
+        try {
+            Empleado nuevo = new Empleado(numero, nombre, sueldo);
+ 
+            if (modelo.agregarEmpleado(nuevo)) {
+                vista.mostrarMensaje("Empleado N° " + numero + " agregado correctamente.");
+            } else {
+                vista.mostrarError("Ya existe un empleado con el número " + numero + ". No se agregó.");
+            }
+        } catch (IllegalArgumentException e) {
+            vista.mostrarError(e.getMessage());
+        } catch (IOException e) {
+            vista.mostrarError("No se pudo guardar el empleado: " + e.getMessage());
+        }
+    }
+ 
+    private void buscarEmpleado() {
+        int numero = vista.leerEntero("Número del empleado a buscar: ");
+ 
+        try {
+            Empleado encontrado = modelo.buscarEmpleado(numero);
+            if (encontrado != null) {
+                vista.mostrarEmpleado(encontrado);
+            } else {
+                vista.mostrarError("No existe un empleado con el número " + numero + ".");
+            }
+        } catch (IOException e) {
+            vista.mostrarError("No se pudo leer el archivo de empleados: " + e.getMessage());
+        }
+    }
+ 
+    private void eliminarEmpleado() {
+        int numero = vista.leerEntero("Número del empleado a eliminar: ");
+ 
+        try {
+            if (modelo.eliminarEmpleado(numero)) {
+                vista.mostrarMensaje("Empleado N° " + numero + " eliminado correctamente.");
+            } else {
+                vista.mostrarError("No existe un empleado con el número " + numero + ". No se eliminó nada.");
+            }
+        } catch (IOException e) {
+            vista.mostrarError("No se pudo actualizar el archivo de empleados: " + e.getMessage());
+        }
+    }
+}
+
+
+
+Java — Código Fuente
+package Ejercicio3;
+
+public class Empleado {
+ 
+    private int numero;
+    private String nombre;
+    private double sueldo;
+ 
+    public Empleado(int numero, String nombre, double sueldo) {
+        setNumero(numero);
+        setNombre(nombre);
+        setSueldo(sueldo);
+    }
+  
+    public int getNumero() {
+        return numero;
+    }
+ 
+    public void setNumero(int numero) {
+        if (numero <= 0) {
+            throw new IllegalArgumentException("El número de empleado debe ser mayor que cero.");
+        }
+        this.numero = numero;
+    }
+ 
+    public String getNombre() {
+        return nombre;
+    }
+ 
+    public void setNombre(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del empleado no puede estar vacío.");
+        }
+        this.nombre = nombre.trim();
+    }
+ 
+    public double getSueldo() {
+        return sueldo;
+    }
+ 
+    public void setSueldo(double sueldo) {
+        if (sueldo < 0) {
+            throw new IllegalArgumentException("El sueldo no puede ser negativo.");
+        }
+        this.sueldo = sueldo;
+    }
+ 
+    @Override
+    public String toString() {
+        return String.format("N° %-5d | Nombre: %-20s | Sueldo: S/ %,.2f", numero, nombre, sueldo);
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+
+public class Main {
+ 
+    public static void main(String[] args) {
+        ModeloEmpleados modelo = new ModeloEmpleados("empleados.dat");
+        VistaEmpleados vista = new VistaEmpleados();
+        ControladorEmpleados controlador = new ControladorEmpleados(modelo, vista);
+ 
+        controlador.iniciar();
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+ 
+public class ModeloEmpleados {
+ 
+    private final String rutaArchivo;
+ 
+    public ModeloEmpleados(String rutaArchivo) {
+        this.rutaArchivo = rutaArchivo;
+    }
+ 
+    public List<Empleado> leerEmpleados() throws IOException {
+        List<Empleado> empleados = new ArrayList<>();
+ 
+        File archivo = new File(rutaArchivo);
+        if (!archivo.exists()) {
+            return empleados;
+        }
+ 
+        try (FileInputStream fis = new FileInputStream(archivo);
+             DataInputStream entrada = new DataInputStream(fis)) {
+ 
+            try {
+                while (true) {
+                    int numero = entrada.readInt();
+                    String nombre = entrada.readUTF();
+                    double sueldo = entrada.readDouble();
+                    empleados.add(new Empleado(numero, nombre, sueldo));
+                }
+            } catch (EOFException e) {
+            } catch (IllegalArgumentException e) {
+                throw new IOException("El archivo contiene datos inválidos: " + e.getMessage());
+            }
+        }
+        return empleados;
+    }
+ 
+    public boolean agregarEmpleado(Empleado nuevo) throws IOException {
+        if (buscarEmpleado(nuevo.getNumero()) != null) {
+            return false;
+        }
+ 
+        try (FileOutputStream fos = new FileOutputStream(rutaArchivo, true);
+             DataOutputStream salida = new DataOutputStream(fos)) {
+            escribirRegistro(salida, nuevo);
+        }
+        return true;
+    }
+ 
+    public Empleado buscarEmpleado(int numero) throws IOException {
+        for (Empleado e : leerEmpleados()) {
+            if (e.getNumero() == numero) {
+                return e;
+            }
+        }
+        return null;
+    }
+ 
+    public boolean eliminarEmpleado(int numero) throws IOException {
+        List<Empleado> empleados = leerEmpleados();
+ 
+        boolean eliminado = false;
+        for (int i = 0; i < empleados.size(); i++) {
+            if (empleados.get(i).getNumero() == numero) {
+                empleados.remove(i);
+                eliminado = true;
+                break;
+            }
+        }
+ 
+        if (eliminado) {
+            guardarTodos(empleados);
+        }
+        return eliminado;
+    }
+ 
+    private void guardarTodos(List<Empleado> empleados) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(rutaArchivo);
+             DataOutputStream salida = new DataOutputStream(fos)) {
+            for (Empleado e : empleados) {
+                escribirRegistro(salida, e);
+            }
+        }
+    }
+ 
+    private void escribirRegistro(DataOutputStream salida, Empleado e) throws IOException {
+        salida.writeInt(e.getNumero());
+        salida.writeUTF(e.getNombre());
+        salida.writeDouble(e.getSueldo());
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio3;
+
+import java.util.List;
+import java.util.Scanner;
+ 
+public class VistaEmpleados {
+ 
+    private final Scanner sc = new Scanner(System.in);
+ 
+    public void mostrarMenu() {
+        System.out.println("\n===== EMPLEADOS DE LA EMPRESA =====");
+        System.out.println("1. Listar todos los empleados");
+        System.out.println("2. Agregar un nuevo empleado");
+        System.out.println("3. Buscar un empleado por su número");
+        System.out.println("4. Eliminar un empleado por su número");
+        System.out.println("5. Salir del programa");
+    }
+ 
+    public void mostrarEmpleados(List<Empleado> empleados) {
+        if (empleados.isEmpty()) {
+            System.out.println("No hay empleados registrados.");
+            return;
+        }
+        System.out.println("\n--- Empleados registrados (" + empleados.size() + ") ---");
+        for (Empleado e : empleados) {
+            System.out.println(e);
+        }
+    }
+ 
+    public void mostrarEmpleado(Empleado e) {
+        System.out.println("Empleado encontrado: " + e);
+    }
+ 
+    public void mostrarMensaje(String mensaje) {
+        System.out.println("[OK] " + mensaje);
+    }
+ 
+    public void mostrarError(String mensaje) {
+        System.out.println("[ERROR] " + mensaje);
+    }
+  
+    public int leerEntero(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String texto = sc.nextLine().trim();
+            try {
+                return Integer.parseInt(texto);
+            } catch (NumberFormatException e) {
+                mostrarError("Entrada no válida. Escribe un número entero.");
+            }
+        }
+    }
+ 
+    public double leerDecimal(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String texto = sc.nextLine().trim().replace(',', '.');
+            try {
+                return Double.parseDouble(texto);
+            } catch (NumberFormatException e) {
+                mostrarError("Entrada no válida. Escribe un número (por ejemplo 1500.50).");
+            }
+        }
+    }
+ 
+    public String leerTexto(String mensaje) {
+        System.out.print(mensaje);
+        return sc.nextLine().trim();
+    }
+ 
+    public void cerrar() {
+        sc.close();
+    }
+}
+
+4.	Ejercicio de Contador de Palabras:
+
+Java — Código Fuente
+package Ejercicio4;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+public class ContadorPalabras {
+
+    private static final int TOP_PALABRAS = 10;
+
+    private int totalLineas;
+    private int totalPalabras;
+    private int totalCaracteres;
+    private final Map<String, Integer> frecuencias = new HashMap<>();
+
+    public static void main(String[] args) {
+        ContadorPalabras contador = new ContadorPalabras();
+        Scanner scanner = new Scanner(System.in);
+        boolean terminado = false;
+
+        while (!terminado) {
+            File archivo = seleccionarArchivo(scanner);
+
+            if (archivo == null) {
+                System.out.print("¿Deseas intentar con otro archivo? (s/n): ");
+                String respuesta = scanner.nextLine().trim();
+                if (!respuesta.equalsIgnoreCase("s") && !respuesta.equalsIgnoreCase("si")) {
+                    System.out.println("Programa finalizado sin analizar ningún archivo.");
+                    break;
+                }
+                continue;
+            }
+
+            String error = validarArchivo(archivo);
+            if (error != null) {
+                notificarError(error);
+                continue;
+            }
+
+            try {
+                contador.analizar(archivo);
+                contador.mostrarResultados(archivo);
+                terminado = true;
+            } catch (IOException e) {
+                notificarError("Ocurrió un error al leer el archivo: " + e.getMessage());
+            }
+        }
+        scanner.close();
+    }
+
+    private static File seleccionarArchivo(Scanner scanner) {
+        System.out.print("\nIntroduce la ruta del archivo a analizar (o presiona Enter para salir): ");
+        String ruta = scanner.nextLine().trim();
+        if (ruta.isEmpty()) {
+            return null;
+        }
+        return new File(ruta);
+    }
+
+    public static String validarArchivo(File archivo) {
+        if (!archivo.exists()) {
+            return "El archivo '" + archivo.getName() + "' no existe.";
+        }
+        if (!archivo.isFile()) {
+            return "'" + archivo.getName() + "' no es un archivo (es un directorio).";
+        }
+        if (!archivo.canRead()) {
+            return "No se tienen permisos para leer '" + archivo.getName() + "'.";
+        }
+        return null;
+    }
+
+    private static void notificarError(String mensaje) {
+        System.out.println("[ERROR] " + mensaje + " Por favor, intenta de nuevo.");
+    }
+
+    public void analizar(File archivo) throws IOException {
+        totalLineas = 0;
+        totalPalabras = 0;
+        totalCaracteres = 0;
+        frecuencias.clear();
+
+        try (BufferedReader lector = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = lector.readLine()) != null) {
+                totalLineas++;
+                totalCaracteres += linea.length();
+                contarPalabras(linea);
+            }
+        }
+    }
+
+    private void contarPalabras(String linea) {
+        StringBuilder palabra = new StringBuilder();
+
+        for (int i = 0; i < linea.length(); i++) {
+            char c = linea.charAt(i);
+            if (Character.isLetterOrDigit(c)) {
+                palabra.append(Character.toLowerCase(c));
+            } else if (palabra.length() > 0) {
+                registrarPalabra(palabra.toString());
+                palabra.setLength(0);
+            }
+        }
+        if (palabra.length() > 0) {
+            registrarPalabra(palabra.toString());
+        }
+    }
+
+    private void registrarPalabra(String palabra) {
+        totalPalabras++;
+        frecuencias.merge(palabra, 1, Integer::sum);
+    }
+
+    public double getPromedioPalabrasPorLinea() {
+        if (totalLineas == 0) {
+            return 0;
+        }
+        return (double) totalPalabras / totalLineas;
+    }
+
+    private List<Map.Entry<String, Integer>> palabrasMasFrecuentes() {
+        List<Map.Entry<String, Integer>> lista = new ArrayList<>(frecuencias.entrySet());
+        lista.sort((a, b) -> {
+            int porFrecuencia = Integer.compare(b.getValue(), a.getValue());
+            return (porFrecuencia != 0) ? porFrecuencia : a.getKey().compareTo(b.getKey());
+        });
+        return lista;
+    }
+
+    public void mostrarResultados(File archivo) {
+        System.out.println("\n=== RESULTADOS PARA: " + archivo.getName() + " ===");
+        System.out.println("Total de líneas:       " + totalLineas);
+        System.out.println("Total de palabras:     " + totalPalabras);
+        System.out.println("Total de caracteres:   " + totalCaracteres + " (sin contar fin de línea)");
+        System.out.printf("Promedio de palabras por línea: %.2f%n", getPromedioPalabrasPorLinea());
+
+        List<Map.Entry<String, Integer>> ranking = palabrasMasFrecuentes();
+        if (ranking.isEmpty()) {
+            System.out.println("\nEl archivo no contiene palabras.");
+            return;
+        }
+
+        int cantidad = Math.min(TOP_PALABRAS, ranking.size());
+        System.out.println("\nPalabras más frecuentes (top " + cantidad + "):");
+        for (int i = 0; i < cantidad; i++) {
+            Map.Entry<String, Integer> entrada = ranking.get(i);
+            System.out.printf("%2d. %-15s %d%n", i + 1, entrada.getKey(), entrada.getValue());
+        }
+    }
+}
