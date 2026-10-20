@@ -1,0 +1,562 @@
+--------------actividades----------------------
+package lab08;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class Principal {
+
+    private static final String URL = "jdbc:sqlite:estudiantes.db";
+
+    public static void main(String[] args) {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            try (Connection con = DriverManager.getConnection(URL)) {
+                System.out.println("Se creó y/o abrió la base de datos.");
+
+                crearTabla(con);
+
+                System.out.println("\n--- 1. INSERTAR (PreparedStatement) ---");
+                insertar(con, 1, "Carlos", 20);
+                insertar(con, 2, "Bety", 22);
+                insertar(con, 3, "Laura", 19);
+                listar(con);
+
+                System.out.println("\n--- 2. ACTUALIZAR (PreparedStatement) ");
+                actualizar(con, 2, "Beatriz", 23);
+                listar(con);
+
+                System.out.println("\n--- 3. BUSCAR POR ID (PreparedStatement) ");
+                buscarPorId(con, 3);
+
+                System.out.println("\n--- 4. BORRAR (PreparedStatement) ---");
+                borrar(con, 1);
+                listar(con);
+
+                System.out.println("\n--- 5. TRANSACCIÓN CON COMMIT ---");
+                transaccionCommit(con);
+                listar(con);
+
+                System.out.println("\n--- 6. TRANSACCIÓN CON ROLLBACK ---");
+                transaccionRollback(con);
+                listar(con);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    static void crearTabla(Connection con) throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS estudiante");
+            stmt.execute("CREATE TABLE estudiante ("
+                    + "id INTEGER PRIMARY KEY, "
+                    + "nombre TEXT NOT NULL, "
+                    + "edad INTEGER)");
+            System.out.println("Creación de tabla exitosa");
+        }
+    }
+
+    static void insertar(Connection con, int id, String nombre, int edad) throws SQLException {
+        String sql = "INSERT INTO estudiante (id, nombre, edad) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.setString(2, nombre);
+            ps.setInt(3, edad);
+            int filas = ps.executeUpdate();
+            System.out.println(filas + " registro(s) insertado(s): " + nombre);
+        }
+    }
+
+    static void listar(Connection con) throws SQLException {
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM estudiante")) {
+            System.out.println("ID | NOMBRE | EDAD");
+            while (rs.next()) {
+                System.out.println(rs.getInt(1) + " | " + rs.getString(2) + " | " + rs.getInt(3));
+            }
+        }
+    }
+
+    static void buscarPorId(Connection con, int id) throws SQLException {
+        String sql = "SELECT * FROM estudiante WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    System.out.println("Encontrado: " + rs.getInt("id") + " | "
+                            + rs.getString("nombre") + " | " + rs.getInt("edad"));
+                } else {
+                    System.out.println("No existe el registro con id " + id);
+                }
+            }
+        }
+    }
+
+    static void actualizar(Connection con, int id, String nombre, int edad) throws SQLException {
+        String sql = "UPDATE estudiante SET nombre = ?, edad = ? WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, nombre);
+            ps.setInt(2, edad);
+            ps.setInt(3, id);
+            int filas = ps.executeUpdate();
+            System.out.println(filas + " registro(s) actualizado(s)");
+        }
+    }
+
+    static void borrar(Connection con, int id) throws SQLException {
+        String sql = "DELETE FROM estudiante WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            int filas = ps.executeUpdate();
+            System.out.println(filas + " registro(s) borrado(s)");
+        }
+    }
+
+    static void transaccionCommit(Connection con) throws SQLException {
+        con.setAutoCommit(false);
+        try {
+            insertar(con, 190, "Jose", 21);
+            insertar(con, 191, "Diana", 24);
+            con.commit();
+            System.out.println("Commit realizado: los datos quedaron guardados.");
+        } catch (SQLException e) {
+            con.rollback();
+            System.out.println("Error, se hizo rollback: " + e.getMessage());
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+
+    static void transaccionRollback(Connection con) throws SQLException {
+        con.setAutoCommit(false);
+        try {
+            insertar(con, 200, "Andy", 25);
+            con.rollback();
+            System.out.println("Rollback realizado: Andy NO quedó guardado.");
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+}
+
+-------------------------EJERCICIOS----------------------------------
+1
+Java — Código Fuente
+package Ejercicio1;
+
+import java.sql.*;
+import java.util.Scanner;
+ 
+public class Principal {
+ 
+    public static void confirmar(Connection con, Scanner sc) throws Exception {
+        System.out.print("Ingrese la clave para confirmar: ");
+        String claveIngresada = sc.nextLine();
+        if (claveIngresada.equals("1234")) {
+            con.commit();
+            System.out.println("Clave correcta, cambios confirmados");
+        } else {
+            con.rollback();
+            System.out.println("Clave incorrecta, cambios revertidos");
+        }
+    }
+ 
+    public static void main(String[] args) {
+        try {
+            Class.forName("org.sqlite.JDBC");
+ 
+            Connection con = DriverManager.getConnection("jdbc:sqlite:ejemplo.db");
+ 
+            if (con != null) {
+                System.out.println("Se creo y/o abrio la base de datos: ");
+            }
+ 
+            Statement stmt = con.createStatement();
+            stmt.execute("CREATE TABLE IF NOT EXISTS alumno (id integer PRIMARY KEY, nombre text, edad integer, carrera text);");
+ 
+            con.setAutoCommit(false);
+ 
+            Scanner sc = new Scanner(System.in);
+            int opcion = 0;
+ 
+            do {
+                System.out.println();
+                System.out.println("===== MENU =====");
+                System.out.println("1. Ingresar");
+                System.out.println("2. Borrar");
+                System.out.println("3. Actualizar");
+                System.out.println("4. Mostrar");
+                System.out.println("5. Salir");
+                System.out.print("Elija una opcion: ");
+ 
+                try {
+                    opcion = Integer.parseInt(sc.nextLine());
+ 
+                    if (opcion == 1) {
+                        System.out.print("Id: ");
+                        int id = Integer.parseInt(sc.nextLine());
+                        System.out.print("Nombre: ");
+                        String nombre = sc.nextLine();
+                        System.out.print("Edad: ");
+                        int edad = Integer.parseInt(sc.nextLine());
+                        System.out.print("Carrera: ");
+                        String carrera = sc.nextLine();
+ 
+                        PreparedStatement ps = con.prepareStatement("insert into alumno values(?,?,?,?)");
+                        ps.setInt(1, id);
+                        ps.setString(2, nombre);
+                        ps.setInt(3, edad);
+                        ps.setString(4, carrera);
+                        int i = ps.executeUpdate();
+                        System.out.println(i + " registros insertados");
+ 
+                        confirmar(con, sc);
+                    } else if (opcion == 2) {
+                        System.out.print("Id del registro a borrar: ");
+                        int id = Integer.parseInt(sc.nextLine());
+ 
+                        PreparedStatement ps = con.prepareStatement("delete from alumno where id=?");
+                        ps.setInt(1, id);
+                        int i = ps.executeUpdate();
+                        System.out.println(i + " registros borrados");
+ 
+                        confirmar(con, sc);
+                    } else if (opcion == 3) {
+                        System.out.print("Id del registro a actualizar: ");
+                        int id = Integer.parseInt(sc.nextLine());
+                        System.out.print("Nuevo nombre: ");
+                        String nombre = sc.nextLine();
+                        System.out.print("Nueva edad: ");
+                        int edad = Integer.parseInt(sc.nextLine());
+                        System.out.print("Nueva carrera: ");
+                        String carrera = sc.nextLine();
+ 
+                        PreparedStatement ps = con.prepareStatement("update alumno set nombre=?, edad=?, carrera=? where id=?");
+                        ps.setString(1, nombre);
+                        ps.setInt(2, edad);
+                        ps.setString(3, carrera);
+                        ps.setInt(4, id);
+                        int i = ps.executeUpdate();
+                        System.out.println(i + " registros actualizados");
+ 
+                        confirmar(con, sc);
+                    } else if (opcion == 4) {
+                        ResultSet rs = stmt.executeQuery("SELECT * FROM alumno");
+                        while (rs.next())
+                            System.out.println(rs.getInt(1) + " " + rs.getString(2) + " " + rs.getInt(3) + " " + rs.getString(4));
+                    } else if (opcion != 5) {
+                        System.out.println("Opcion no valida");
+                    }
+                } catch (Exception e) {
+                    System.out.println(e);
+                    con.rollback();
+                }
+            } while (opcion != 5);
+ 
+            con.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+}
+
+
+2------------------
+
+
+package Ejercicio2;
+
+public class Alumno {
+	 
+    private int id;
+    private String nombre;
+    private int edad;
+    private String carrera;
+ 
+    public Alumno(int id, String nombre, int edad, String carrera) {
+        this.id = id;
+        this.nombre = nombre;
+        this.edad = edad;
+        this.carrera = carrera;
+    }
+ 
+    public int getId() {
+        return id;
+    }
+ 
+    public String getNombre() {
+        return nombre;
+    }
+ 
+    public int getEdad() {
+        return edad;
+    }
+ 
+    public String getCarrera() {
+        return carrera;
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+
+import java.sql.*;
+import java.util.ArrayList;
+ 
+public class Gestora {
+ 
+    private ArrayList<Alumno> alumnos = new ArrayList<Alumno>();
+ 
+    public void cargar(Connection con) throws Exception {
+        alumnos.clear();
+        Statement stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT * FROM alumno");
+        while (rs.next())
+            alumnos.add(new Alumno(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getString(4)));
+    }
+ 
+    private int compararConValor(Alumno a, String campo, String valor) {
+        if (campo.equals("id"))
+            return Integer.compare(a.getId(), Integer.parseInt(valor));
+        if (campo.equals("edad"))
+            return Integer.compare(a.getEdad(), Integer.parseInt(valor));
+        if (campo.equals("nombre"))
+            return a.getNombre().compareToIgnoreCase(valor);
+        return a.getCarrera().compareToIgnoreCase(valor);
+    }
+ 
+    private int compararAlumnos(Alumno a, Alumno b, String campo) {
+        if (campo.equals("id"))
+            return Integer.compare(a.getId(), b.getId());
+        if (campo.equals("edad"))
+            return Integer.compare(a.getEdad(), b.getEdad());
+        if (campo.equals("nombre"))
+            return a.getNombre().compareToIgnoreCase(b.getNombre());
+        return a.getCarrera().compareToIgnoreCase(b.getCarrera());
+    }
+ 
+    private boolean cumple(int resultado, String operador) {
+        if (operador.equals("="))
+            return resultado == 0;
+        if (operador.equals(">"))
+            return resultado > 0;
+        if (operador.equals("<"))
+            return resultado < 0;
+        if (operador.equals(">="))
+            return resultado >= 0;
+        if (operador.equals("<="))
+            return resultado <= 0;
+        if (operador.equals("!="))
+            return resultado != 0;
+        return false;
+    }
+ 
+    public void consultar(String[] campos, String campoCondicion, String operador, String valor,
+            String campoOrden, boolean ascendente, int limite) {
+ 
+        ArrayList<Alumno> resultado = new ArrayList<Alumno>();
+ 
+        for (Alumno a : alumnos) {
+            if (campoCondicion.equals("") || cumple(compararConValor(a, campoCondicion, valor), operador))
+                resultado.add(a);
+        }
+ 
+        if (!campoOrden.equals("")) {
+            for (int i = 0; i < resultado.size() - 1; i++) {
+                for (int j = 0; j < resultado.size() - 1 - i; j++) {
+                    int r = compararAlumnos(resultado.get(j), resultado.get(j + 1), campoOrden);
+                    if (!ascendente)
+                        r = -r;
+                    if (r > 0) {
+                        Alumno auxiliar = resultado.get(j);
+                        resultado.set(j, resultado.get(j + 1));
+                        resultado.set(j + 1, auxiliar);
+                    }
+                }
+            }
+        }
+ 
+        int cantidad = resultado.size();
+        if (limite > 0 && limite < cantidad)
+            cantidad = limite;
+ 
+        for (int i = 0; i < cantidad; i++) {
+            Alumno a = resultado.get(i);
+            String linea = "";
+            for (String campo : campos) {
+                if (campo.equals("id"))
+                    linea += a.getId() + " ";
+                if (campo.equals("nombre"))
+                    linea += a.getNombre() + " ";
+                if (campo.equals("edad"))
+                    linea += a.getEdad() + " ";
+                if (campo.equals("carrera"))
+                    linea += a.getCarrera() + " ";
+            }
+            System.out.println(linea);
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+
+import java.sql.*;
+import java.util.Scanner;
+ 
+public class Principal {
+ 
+    public static void confirmar(Connection con, Scanner sc) throws Exception {
+        System.out.print("Ingrese la clave para confirmar: ");
+        String claveIngresada = sc.nextLine();
+        if (claveIngresada.equals("1234")) {
+            con.commit();
+            System.out.println("Clave correcta, cambios confirmados");
+        } else {
+            con.rollback();
+            System.out.println("Clave incorrecta, cambios revertidos");
+        }
+    }
+ 
+    public static void main(String[] args) {
+        try {
+            Class.forName("org.sqlite.JDBC");
+ 
+            Connection con = DriverManager.getConnection("jdbc:sqlite:ejemplo.db");
+ 
+            if (con != null) {
+                System.out.println("Se creo y/o abrio la base de datos: ");
+            }
+ 
+            Statement stmt = con.createStatement();
+            stmt.execute("CREATE TABLE IF NOT EXISTS alumno (id integer PRIMARY KEY, nombre text, edad integer, carrera text);");
+ 
+            con.setAutoCommit(false);
+ 
+            Scanner sc = new Scanner(System.in);
+            Gestora gestora = new Gestora();
+            int opcion = 0;
+ 
+            do {
+                System.out.println();
+                System.out.println("===== MENU =====");
+                System.out.println("1. Ingresar");
+                System.out.println("2. Borrar");
+                System.out.println("3. Actualizar");
+                System.out.println("4. Mostrar");
+                System.out.println("5. Consultar");
+                System.out.println("6. Salir");
+                System.out.print("Elija una opcion: ");
+ 
+                try {
+                    opcion = Integer.parseInt(sc.nextLine());
+ 
+                    if (opcion == 1) {
+                        System.out.print("Id: ");
+                        int id = Integer.parseInt(sc.nextLine());
+                        System.out.print("Nombre: ");
+                        String nombre = sc.nextLine();
+                        System.out.print("Edad: ");
+                        int edad = Integer.parseInt(sc.nextLine());
+                        System.out.print("Carrera: ");
+                        String carrera = sc.nextLine();
+ 
+                        PreparedStatement ps = con.prepareStatement("insert into alumno values(?,?,?,?)");
+                        ps.setInt(1, id);
+                        ps.setString(2, nombre);
+                        ps.setInt(3, edad);
+                        ps.setString(4, carrera);
+                        int i = ps.executeUpdate();
+                        System.out.println(i + " registros insertados");
+ 
+                        confirmar(con, sc);
+                    } else if (opcion == 2) {
+                        System.out.print("Id del registro a borrar: ");
+                        int id = Integer.parseInt(sc.nextLine());
+ 
+                        PreparedStatement ps = con.prepareStatement("delete from alumno where id=?");
+                        ps.setInt(1, id);
+                        int i = ps.executeUpdate();
+                        System.out.println(i + " registros borrados");
+ 
+                        confirmar(con, sc);
+                    } else if (opcion == 3) {
+                        System.out.print("Id del registro a actualizar: ");
+                        int id = Integer.parseInt(sc.nextLine());
+                        System.out.print("Nuevo nombre: ");
+                        String nombre = sc.nextLine();
+                        System.out.print("Nueva edad: ");
+                        int edad = Integer.parseInt(sc.nextLine());
+                        System.out.print("Nueva carrera: ");
+                        String carrera = sc.nextLine();
+ 
+                        PreparedStatement ps = con.prepareStatement("update alumno set nombre=?, edad=?, carrera=? where id=?");
+                        ps.setString(1, nombre);
+                        ps.setInt(2, edad);
+                        ps.setString(3, carrera);
+                        ps.setInt(4, id);
+                        int i = ps.executeUpdate();
+                        System.out.println(i + " registros actualizados");
+ 
+                        confirmar(con, sc);
+                    } else if (opcion == 4) {
+                        ResultSet rs = stmt.executeQuery("SELECT * FROM alumno");
+                        while (rs.next())
+                            System.out.println(rs.getInt(1) + " " + rs.getString(2) + " " + rs.getInt(3) + " " + rs.getString(4));
+                    } else if (opcion == 5) {
+                        gestora.cargar(con);
+ 
+                        System.out.print("Campos a mostrar (id, nombre, edad, carrera separados por coma, vacio para todos): ");
+                        String texto = sc.nextLine();
+                        String[] campos;
+                        if (texto.trim().equals("")) {
+                            campos = new String[] { "id", "nombre", "edad", "carrera" };
+                        } else {
+                            campos = texto.split(",");
+                            for (int i = 0; i < campos.length; i++)
+                                campos[i] = campos[i].trim().toLowerCase();
+                        }
+ 
+                        System.out.print("Campo de la condicion (vacio si no hay condicion): ");
+                        String campoCondicion = sc.nextLine().trim().toLowerCase();
+                        String operador = "";
+                        String valor = "";
+                        if (!campoCondicion.equals("")) {
+                            System.out.print("Operador (=, !=, >, <, >=, <=): ");
+                            operador = sc.nextLine().trim();
+                            System.out.print("Valor: ");
+                            valor = sc.nextLine().trim();
+                        }
+ 
+                        System.out.print("Campo para ordenar (vacio si no se ordena): ");
+                        String campoOrden = sc.nextLine().trim().toLowerCase();
+                        boolean ascendente = true;
+                        if (!campoOrden.equals("")) {
+                            System.out.print("Orden (asc/desc): ");
+                            ascendente = !sc.nextLine().trim().equalsIgnoreCase("desc");
+                        }
+ 
+                        System.out.print("Limite de registros (0 para todos): ");
+                        int limite = Integer.parseInt(sc.nextLine());
+ 
+                        gestora.consultar(campos, campoCondicion, operador, valor, campoOrden, ascendente, limite);
+                    } else if (opcion != 6) {
+                        System.out.println("Opcion no valida");
+                    }
+                } catch (Exception e) {
+                    System.out.println(e);
+                    con.rollback();
+                }
+            } while (opcion != 6);
+ 
+            con.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+}
