@@ -1,1 +1,456 @@
+------ACTIVIDAD-----------
+
+Java — Código Fuente
+// Archivo "Integrantes.java"
+public final class Integrantes
+{
+    public static final String NOMBRES =
+        "José Alfredo Muñoz Velasco, Pablo, Pedro";
+
+    private Integrantes() { } // clase de utilidad: no se instancia
+}
+
+
+Java — Código Fuente
+// Archivo "App.java"
+// Prueba de los tres administradores de esquemas.
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
+public class App
+{
+    public static void main(String[] args)
+    {
+        SwingUtilities.invokeLater(() -> {
+            mostrar(new MarcoFlowLayout(), 520, 140, 40, 40);
+            mostrar(new MarcoBorderLayout(), 520, 220, 40, 220);
+            mostrar(new MarcoGridLayout(), 520, 200, 40, 480);
+        });
+    }
+
+    // configura y muestra una ventana en la posición indicada
+    private static void mostrar(JFrame marco, int ancho, int alto, int x, int y)
+    {
+        marco.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        marco.setSize(ancho, alto);
+        marco.setLocation(x, y);
+        marco.setVisible(true);
+    }
+} // fin de la clase App
+
+1. FlowLayout
+FlowLayout coloca los componentes de izquierda a derecha en el orden en que se agregan y, cuando no caben, pasa a la fila siguiente. Los botones Izquierda, Centro y Derecha cambian la alineación de cada fila en tiempo de ejecución.
+
+Java — Código Fuente
+// Archivo "MarcoFlowLayout.java"
+import java.awt.Container;
+import java.awt.FlowLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
+public class MarcoFlowLayout extends JFrame
+{
+    private final JButton botonIzquierda; // alinea a la izquierda
+    private final JButton botonCentro;    // alinea al centro
+    private final JButton botonDerecha;   // alinea a la derecha
+    private final FlowLayout esquema;     // objeto del esquema
+    private final Container contenedor;   // contenedor donde se aplica el esquema
+
+    public MarcoFlowLayout()
+    {
+        super("FlowLayout - " + Integrantes.NOMBRES);
+        esquema = new FlowLayout();
+        contenedor = getContentPane();
+        setLayout(esquema);
+
+        botonIzquierda = new JButton("Izquierda");
+        add(botonIzquierda);
+        botonIzquierda.addActionListener(e -> cambiarAlineacion(FlowLayout.LEFT));
+
+        botonCentro = new JButton("Centro");
+        add(botonCentro);
+        botonCentro.addActionListener(e -> cambiarAlineacion(FlowLayout.CENTER));
+
+        botonDerecha = new JButton("Derecha");
+        add(botonDerecha);
+        botonDerecha.addActionListener(e -> cambiarAlineacion(FlowLayout.RIGHT));
+
+        // botones extra para ver cómo FlowLayout pasa a la siguiente fila
+        for (int i = 1; i <= 4; i++)
+            add(new JButton("Componente " + i));
+    }
+
+    // cambia la alineación y vuelve a distribuir los componentes
+    private void cambiarAlineacion(int alineacion)
+    {
+        esquema.setAlignment(alineacion);
+        esquema.layoutContainer(contenedor);
+    }
+} // fin de la clase MarcoFlowLayout
+
+
+2. BorderLayout
+BorderLayout divide el contenedor en cinco regiones (NORTH, SOUTH, EAST, WEST y CENTER) y admite un solo componente por región. Al pulsar un botón, este se oculta y las regiones vecinas ocupan su espacio.
+
+
+Java — Código Fuente
+// Archivo "MarcoBorderLayout.java"
+// Demostración de BorderLayout: al pulsar un botón se oculta y los demás ocupan su espacio.
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
+public class MarcoBorderLayout extends JFrame implements ActionListener
+{
+    private final JButton[] botones; // un botón por región
+    private static final String[] NOMBRES =
+        {"Ocultar Norte", "Ocultar Sur", "Ocultar Este", "Ocultar Oeste", "Ocultar Centro"};
+    private static final String[] REGIONES = {BorderLayout.NORTH, BorderLayout.SOUTH,
+        BorderLayout.EAST, BorderLayout.WEST, BorderLayout.CENTER};
+    private final BorderLayout esquema;
+
+    public MarcoBorderLayout()
+    {
+        super("BorderLayout - " + Integrantes.NOMBRES);
+        esquema = new BorderLayout(5, 5); // 5 píxeles de separación horizontal y vertical
+        setLayout(esquema);
+
+        botones = new JButton[NOMBRES.length];
+        for (int i = 0; i < NOMBRES.length; i++)
+        {
+            botones[i] = new JButton(NOMBRES[i]);
+            botones[i].addActionListener(this);
+            add(botones[i], REGIONES[i]); // agrega cada botón a su región
+        }
+    }
+
+    // oculta el botón pulsado y muestra los demás
+    @Override
+    public void actionPerformed(ActionEvent evento)
+    {
+        for (JButton boton : botones)
+            boton.setVisible(evento.getSource() != boton);
+        esquema.layoutContainer(getContentPane()); // redistribuye el contenido
+    }
+} // fin de la clase MarcoBorderLayout
+
+
+3. GridLayout
+GridLayout ordena los componentes en una cuadrícula de filas y columnas donde todas las celdas tienen el mismo tamaño. Cada clic en cualquier botón alterna entre una cuadrícula de 2x3 con separación de 5 píxeles y otra de 3x2 sin separación.
+
+Java — Código Fuente
+// Archivo "MarcoGridLayout.java"
+// Demostración de GridLayout: cada clic alterna entre una cuadrícula de 2x3 y otra de 3x2.
+import java.awt.Container;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
+public class MarcoGridLayout extends JFrame implements ActionListener
+{
+    private final JButton[] botones;
+    private static final String[] NOMBRES = {"uno", "dos", "tres", "cuatro", "cinco", "seis"};
+    private boolean alternar = true;        // indica qué esquema se muestra
+    private final Container contenedor;
+    private final GridLayout cuadricula1;   // 2 filas, 3 columnas
+    private final GridLayout cuadricula2;   // 3 filas, 2 columnas
+
+    public MarcoGridLayout()
+    {
+        super("GridLayout - " + Integrantes.NOMBRES);
+        cuadricula1 = new GridLayout(2, 3, 5, 5); // con 5 píxeles de separación
+        cuadricula2 = new GridLayout(3, 2);       // sin separación
+        contenedor = getContentPane();
+        setLayout(cuadricula1);
+
+        botones = new JButton[NOMBRES.length];
+        for (int i = 0; i < NOMBRES.length; i++)
+        {
+            botones[i] = new JButton(NOMBRES[i]);
+            botones[i].addActionListener(this);
+            add(botones[i]);
+        }
+    }
+
+    // alterna entre los dos esquemas de cuadrícula
+    @Override
+    public void actionPerformed(ActionEvent evento)
+    {
+        contenedor.setLayout(alternar ? cuadricula2 : cuadricula1);
+        alternar = !alternar;
+        contenedor.validate(); // vuelve a distribuir los componentes
+    }
+} // fin de la clase MarcoGridLayout
+
+--------------EJERCICIO------------------
+
+Java — Código Fuente
+package Ejercicio2;
+
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+
+public class MarcoCompraPasaje extends JFrame
+{
+    private final JPanel panelDatos;
+    private final JPanel panelPiso;
+    private final JPanel panelServicios;
+    private final JPanel panelBotones;
+
+    private final JLabel etiquetaNombres;
+    private final JLabel etiquetaDocumento;
+    private final JLabel etiquetaFecha;
+    private final JLabel etiquetaOrigen;
+    private final JLabel etiquetaDestino;
+    private final JLabel etiquetaPiso;
+    private final JLabel etiquetaServicios;
+    private final JLabel etiquetaCalidad;
+
+    private final JTextField campoNombres;
+    private final JTextField campoDocumento;
+    private final JTextField campoFecha;
+
+    private final JComboBox<String> comboOrigen;
+    private final JComboBox<String> comboDestino;
+
+    private final JRadioButton botonPrimerPiso;
+    private final JRadioButton botonSegundoPiso;
+    private final ButtonGroup grupoPisos;
+
+    private final JCheckBox casillaAudifonos;
+    private final JCheckBox casillaManta;
+    private final JCheckBox casillaRevistas;
+
+    private final JList<String> listaCalidad;
+
+    private final JButton botonResumen;
+    private final JButton botonReiniciar;
+
+    private static final String[] LUGARES = { "-- Seleccione --", "Arequipa", "Lima", "Cusco",
+        "Tacna", "Puno", "Ica", "Moquegua" };
+    private static final String[] CALIDADES = { "Economico", "Standard", "VIP" };
+
+    public MarcoCompraPasaje()
+    {
+        super("Compra de pasajes - Transporte terrestre");
+        setLayout(new BorderLayout());
+
+        panelDatos = new JPanel();
+        panelDatos.setLayout(new GridLayout(0, 2, 10, 8));
+        panelDatos.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        etiquetaNombres = new JLabel("Nombres completos:");
+        campoNombres = new JTextField(20);
+        campoNombres.setToolTipText("Escriba nombres y apellidos del pasajero");
+        panelDatos.add(etiquetaNombres);
+        panelDatos.add(campoNombres);
+
+        etiquetaDocumento = new JLabel("Documento de identidad (DNI):");
+        campoDocumento = new JTextField(8);
+        campoDocumento.setToolTipText("8 digitos");
+        panelDatos.add(etiquetaDocumento);
+        panelDatos.add(campoDocumento);
+
+        etiquetaFecha = new JLabel("Fecha de viaje (dd/mm/aaaa):");
+        campoFecha = new JTextField(10);
+        campoFecha.setToolTipText("Ejemplo: 25/12/2026");
+        panelDatos.add(etiquetaFecha);
+        panelDatos.add(campoFecha);
+
+        etiquetaOrigen = new JLabel("Lugar de origen:");
+        comboOrigen = new JComboBox<String>(LUGARES);
+        panelDatos.add(etiquetaOrigen);
+        panelDatos.add(comboOrigen);
+
+        etiquetaDestino = new JLabel("Lugar de destino:");
+        comboDestino = new JComboBox<String>(LUGARES);
+        panelDatos.add(etiquetaDestino);
+        panelDatos.add(comboDestino);
+
+        etiquetaPiso = new JLabel("Piso:");
+        panelPiso = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        botonPrimerPiso = new JRadioButton("1er piso", true);
+        botonSegundoPiso = new JRadioButton("2do piso", false);
+        grupoPisos = new ButtonGroup();
+        grupoPisos.add(botonPrimerPiso);
+        grupoPisos.add(botonSegundoPiso);
+        panelPiso.add(botonPrimerPiso);
+        panelPiso.add(botonSegundoPiso);
+        panelDatos.add(etiquetaPiso);
+        panelDatos.add(panelPiso);
+
+        etiquetaServicios = new JLabel("Servicios opcionales:");
+        panelServicios = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        casillaAudifonos = new JCheckBox("Audifonos");
+        casillaManta = new JCheckBox("Manta");
+        casillaRevistas = new JCheckBox("Revistas");
+        panelServicios.add(casillaAudifonos);
+        panelServicios.add(casillaManta);
+        panelServicios.add(casillaRevistas);
+        panelDatos.add(etiquetaServicios);
+        panelDatos.add(panelServicios);
+
+        etiquetaCalidad = new JLabel("Calidad de servicio:");
+        listaCalidad = new JList<String>(CALIDADES);
+        listaCalidad.setVisibleRowCount(3);
+        listaCalidad.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listaCalidad.setBorder(BorderFactory.createLineBorder(java.awt.Color.GRAY));
+        panelDatos.add(etiquetaCalidad);
+        panelDatos.add(listaCalidad);
+
+        add(panelDatos, BorderLayout.CENTER);
+
+        panelBotones = new JPanel(new FlowLayout());
+        botonResumen = new JButton("Mostrar resumen");
+        botonReiniciar = new JButton("Reiniciar");
+        panelBotones.add(botonResumen);
+        panelBotones.add(botonReiniciar);
+        add(panelBotones, BorderLayout.SOUTH);
+
+        ManejadorBotones manejador = new ManejadorBotones();
+        botonResumen.addActionListener(manejador);
+        botonReiniciar.addActionListener(manejador);
+    }
+
+    private String validarDatos()
+    {
+        if (campoNombres.getText().trim().isEmpty())
+            return "Debe ingresar los nombres del pasajero.";
+
+        if (!campoDocumento.getText().trim().matches("\\d{8}"))
+            return "El documento de identidad debe tener 8 digitos numericos.";
+
+        if (!campoFecha.getText().trim().matches("\\d{2}/\\d{2}/\\d{4}"))
+            return "La fecha de viaje debe tener el formato dd/mm/aaaa.";
+
+        if (comboOrigen.getSelectedIndex() == 0)
+            return "Debe seleccionar un lugar de origen.";
+
+        if (comboDestino.getSelectedIndex() == 0)
+            return "Debe seleccionar un lugar de destino.";
+
+        if (comboOrigen.getSelectedIndex() == comboDestino.getSelectedIndex())
+            return "El origen y el destino no pueden ser iguales.";
+
+        if (listaCalidad.isSelectionEmpty())
+            return "Debe elegir una calidad de servicio.";
+
+        return "";
+    }
+
+    private void mostrarResumen()
+    {
+        String error = validarDatos();
+
+        if (!error.isEmpty())
+        {
+            JOptionPane.showMessageDialog(this, error, "Datos incompletos",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String servicios = "";
+        if (casillaAudifonos.isSelected())
+            servicios += "Audifonos, ";
+        if (casillaManta.isSelected())
+            servicios += "Manta, ";
+        if (casillaRevistas.isSelected())
+            servicios += "Revistas, ";
+
+        if (servicios.isEmpty())
+            servicios = "Ninguno";
+        else
+            servicios = servicios.substring(0, servicios.length() - 2);
+
+        String piso = botonPrimerPiso.isSelected() ? "1er piso" : "2do piso";
+
+        String resumen = String.format(
+            "RESUMEN DE LA COMPRA%n%n" +
+            "Pasajero: %s%n" +
+            "Documento: %s%n" +
+            "Fecha de viaje: %s%n" +
+            "Origen: %s%n" +
+            "Destino: %s%n" +
+            "Piso: %s%n" +
+            "Servicios opcionales: %s%n" +
+            "Calidad de servicio: %s",
+            campoNombres.getText().trim(),
+            campoDocumento.getText().trim(),
+            campoFecha.getText().trim(),
+            comboOrigen.getSelectedItem(),
+            comboDestino.getSelectedItem(),
+            piso,
+            servicios,
+            listaCalidad.getSelectedValue());
+
+        JOptionPane.showMessageDialog(this, resumen, "Resumen del pasaje",
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void reiniciarFormulario()
+    {
+        campoNombres.setText("");
+        campoDocumento.setText("");
+        campoFecha.setText("");
+        comboOrigen.setSelectedIndex(0);
+        comboDestino.setSelectedIndex(0);
+        botonPrimerPiso.setSelected(true);
+        casillaAudifonos.setSelected(false);
+        casillaManta.setSelected(false);
+        casillaRevistas.setSelected(false);
+        listaCalidad.clearSelection();
+        campoNombres.requestFocus();
+    }
+
+    private class ManejadorBotones implements ActionListener
+    {
+        @Override
+        public void actionPerformed(ActionEvent evento)
+        {
+            if (evento.getSource() == botonResumen)
+                mostrarResumen();
+            else if (evento.getSource() == botonReiniciar)
+                reiniciarFormulario();
+        }
+    }
+}
+
+
+Java — Código Fuente
+package Ejercicio2;
+
+import javax.swing.JFrame;
+ 
+public class App
+{
+    public static void main(String[] args)
+    {
+        MarcoCompraPasaje marcoCompraPasaje = new MarcoCompraPasaje();
+        marcoCompraPasaje.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        marcoCompraPasaje.setSize(480, 400);
+        marcoCompraPasaje.setLocationRelativeTo(null);
+        marcoCompraPasaje.setVisible(true);
+    }
+}
+
 
