@@ -1,0 +1,1566 @@
+----------ACTIVIDADES--------------
+
+package command;
+
+interface Command {
+	public void ejecutar();
+}
+
+package command;
+
+public class Televisor {
+	private int volumen;
+	public Televisor() {
+		this.volumen = 10;
+	}
+	public void encender() {
+		System.out.println("Encendido");
+	}
+	public void apagado() {
+		System.out.println("Apagado");
+	}
+	public void subirVolumen() {
+		if(volumen<100) {
+			volumen++;
+		}
+		System.out.println("Volumen incrementado "+volumen);
+	}
+	public void bajarVolumen() {
+		if(volumen>0) {
+			volumen--;
+		}
+		System.out.println("Volumen disminuido "+volumen);
+	}
+	public void mutear() {
+		volumen = 0;
+		System.out.println("Volumen muteado "+volumen);
+	}
+}
+
+package command;
+
+public class CommandApagar implements Command {
+	
+	private Televisor tv;
+	public CommandApagar(Televisor tv) {
+		this.tv = tv;
+	}
+	@Override
+	public void ejecutar() {
+		tv.apagado();
+	}
+package command;
+
+public class CommandAumentarVolumen  implements Command{
+	private Televisor tv;
+	public CommandAumentarVolumen(Televisor tv) {
+		this.tv = tv;
+	}
+	@Override
+	public void ejecutar() {
+		tv.subirVolumen();
+	}
+}
+
+
+package command;
+
+public class CommandBajarVolumen implements Command{
+	private Televisor tv;
+	public CommandBajarVolumen(Televisor tv) {
+		this.tv = tv;
+	}
+	@Override
+	public void ejecutar() {
+		tv.bajarVolumen();
+	}
+}
+
+
+package command;
+
+public class CommandEncender implements Command{
+	private Televisor tv;
+	public CommandEncender(Televisor tv) {
+		this.tv = tv;
+	}
+	@Override
+	public void ejecutar() {
+		tv.encender();
+	}
+}
+
+
+package command;
+
+public class CommandMutear  implements Command{
+	private Televisor tv;
+	public CommandMutear(Televisor tv) {
+		this.tv = tv;
+	}
+	@Override
+	public void ejecutar() {
+		tv.mutear();
+	}
+}
+
+
+package command;
+
+public class ControlRemoto {
+	private Command command;
+	public ControlRemoto() {};
+	public void setCommand(Command command) {
+		this.command = command;
+	}
+	public void pressButton()
+	{
+		command.ejecutar();
+	}
+}
+
+2--------------
+package strategy;
+
+public interface DiscountStrategy {
+	public double applyDiscount(double price);
+}
+
+
+
+package strategy;
+
+public class DiscountLiquidacion implements DiscountStrategy {
+	@Override
+	public double applyDiscount(double price) {
+		return price*0.5;
+	}
+}
+
+
+
+
+package strategy;
+
+public class DiscountNavidad implements DiscountStrategy{
+	@Override
+	public double applyDiscount(double price) {
+		return price*0.85;
+	}
+}
+
+package strategy;
+
+public class NoDiscount implements DiscountStrategy {
+	@Override
+	public double applyDiscount(double price) {
+		return price;
+	}
+}
+
+
+package strategy;
+public class PriceClaculator{
+    private DiscountStrategy discountStrategy;
+
+    public void setDiscountStrategy(DiscountStrategy discountStrategy) {
+        this.discountStrategy = discountStrategy;
+    }
+
+    public double calculatePrice(double price) {
+        return discountStrategy.applyDiscount(price);
+    }
+}
+
+package strategy;
+
+public class TestPrueba {
+    public static void main(String[] args) {
+    	PriceClaculator calculator = new PriceClaculator();
+        double monto = 50.0;
+        calculator.setDiscountStrategy(new DiscountLiquidacion());
+        System.out.println("Descuento por liquidacion: " + calculator.calculatePrice(monto));
+        calculator.setDiscountStrategy(new NoDiscount());
+        System.out.println("No descuento : " + calculator.calculatePrice(monto));
+        calculator.setDiscountStrategy(new DiscountNavidad());
+        System.out.println("Descuento por Navidad: " + calculator.calculatePrice(monto));
+    }
+}
+3-----------
+package observer;
+
+public interface Observer {
+	public void actualizar(String mensaje);
+}
+
+
+package observer;
+
+public class Usuario implements Observer {
+	
+	private String nombre;
+	public Usuario(String nombre){
+		this.nombre = nombre;
+	}
+	@Override
+	public void actualizar(String mensaje)
+	{
+		System.out.println("Notificacion para : "+ nombre+" : "+mensaje);
+	}
+	
+}
+
+
+package observer;
+import java.util.ArrayList;
+import java.util.List;
+public class SistemaNotificacion {
+	
+	private List<Observer> suscripciones;
+	public SistemaNotificacion() {
+		this.suscripciones = new ArrayList<>();
+	}
+	public void suscribir(Observer o)
+	{
+		suscripciones.add(o);
+	}
+	public void darseDebaja(Observer o){
+		suscripciones.remove(o);
+	}
+	public void notificar(String mensaje)
+	{
+		for(Observer o : suscripciones) {
+			o.actualizar(mensaje);
+		}
+	}
+}
+
+
+package observer;
+
+public class TestPrueba {
+	public static void main(String[] args) {
+		SistemaNotificacion sistema = new SistemaNotificacion();
+		Observer o1 = new Usuario("Brayan");
+        Observer o2 = new Usuario("Alessander");
+        Observer o3 = new Usuario("Americo");
+        sistema.suscribir(o3);
+        sistema.suscribir(o2);
+        sistema.suscribir(o1);
+        sistema.notificar("Mensaje nuevo para todos: ");
+        sistema.darseDebaja(o3);
+        sistema.notificar("Mensaje pa los q quedan: ");
+	}
+}
+
+---2 APP APLICANDO LO APRENDIDO-------------
+Strategy
+
+package patrones;
+
+interface  StrategyPage {
+	public String descripcion();
+    public void procesarPago(double monto);
+}
+
+package patrones;
+
+public class PagoYape implements StrategyPage {
+	private String codigoDeYape;
+	public PagoYape(String codigoDeYape) {
+		this.codigoDeYape = codigoDeYape;
+	}
+	@Override
+	public String descripcion() {
+		return "Pago realizado con tajeta ";
+	}
+	@Override
+	public void procesarPago(double monto) {
+		System.out.println("Pago realizado " + monto+ descripcion());
+	}
+
+}
+
+package patrones;
+
+public class PagoTarjeta implements StrategyPage{
+	private String numeroTarjeta;
+	public PagoTarjeta(String numeroTarjeta) {
+		this.numeroTarjeta = numeroTarjeta;
+	}
+	@Override
+	public String descripcion() {
+		return " Pago realizado con tajeta ";
+	}
+	public void procesarPago(double monto) {
+		System.out.println("Pago  por S/ " + monto+descripcion());
+	}
+
+}
+
+
+package patrones;
+
+public class PagoEfectivo implements StrategyPage{
+	
+	public PagoEfectivo(){
+	}
+	@Override
+	public String descripcion() {
+		return "Pago recivido.... pase e siguiente ";
+	}
+	@Override
+	public void procesarPago(double monto) {
+		System.out.println("Su pago con efectivo fue de  S/ " + monto);
+	}
+}
+
+Observer
+
+package patrones;
+
+public interface Observer {
+	void actualizar(String evento);
+}
+
+
+package patrones;
+
+public class Cliente implements Observer {
+	private String nombre;
+    public Cliente(String nombre) {
+        this.nombre = nombre;
+    }
+    @Override
+    public void actualizar(String mensaje) {
+        System.out.println(nombre + " recibio: " + mensaje);
+    }
+
+}
+
+
+Command
+
+package patrones;
+
+public interface Command {
+    public void ejecutar();
+}
+
+package patrones;
+
+public class CommandAbrir implements Command{
+	private Caja caja;
+	public CommandAbrir(Caja caja) {
+		this.caja = caja;
+	}
+	@Override
+    public void ejecutar() {
+        caja.abrirCaja();
+    }
+}
+
+package patrones;
+
+public class CommandCobrar implements Command {
+	private Caja caja;
+    private double monto;
+
+    public CommandCobrar(Caja caja, double monto) {
+        this.caja = caja;
+        this.monto = monto;
+    }
+    @Override
+    public void ejecutar() {
+        caja.cobrar(monto);
+    }
+}
+
+package patrones;
+
+public class CommandSalir implements Command{
+	private Caja caja;
+	
+	public CommandSalir(Caja caja)
+	{
+		this.caja = caja;
+	}
+	@Override
+	public void ejecutar() {
+		caja.salirCaja();
+	}
+}
+
+package patrones;
+public class ControlCaja {
+    private Command command;
+
+    public void setComando(Command command) {
+        this.command = command;
+    }
+
+    public void presionarBoton() {
+       command.ejecutar();
+    }
+}
+
+
+Principal Caja
+
+package patrones;
+import java.util.ArrayList;
+import java.util.List;
+public class Caja {
+	private StrategyPage estrategia;
+    private List<Observer> observadores = new ArrayList<>();
+    public void suscribir(Observer obs) {
+        observadores.add(obs);
+    }
+    public void setEstrategia(StrategyPage estrategia) {
+        this.estrategia = estrategia;
+    }
+    private void notificar(String msg) {
+        for (Observer obs : observadores) {
+            obs.actualizar(msg);
+        }
+    }
+    public void cobrar(double monto) {
+        if (estrategia == null) {
+            System.out.println("Selecciona una estrategia de pago primero.");
+            return;
+        }
+        estrategia.procesarPago(monto);
+        notificar("Se proceso " + estrategia.descripcion() + " de S/ " + monto);
+    }
+    public void abrirCaja() {
+    	System.out.println("Caja abierta");
+    }
+    public void salirCaja() {
+    	System.out.println("Saliendo de caja");
+    }
+}
+
+Main
+package patrones;
+
+public class Main {
+	public static void main(String[] args) {
+		Caja caja = new Caja();
+        caja.suscribir(new Cliente("Brayan"));
+        ControlCaja control = new ControlCaja();
+        //Abrir
+        control.setComando(new CommandAbrir(caja));
+        control.presionarBoton();
+        //Realizar tarjeta
+        caja.setEstrategia(new PagoTarjeta("1234-5678"));
+        control.setComando(new CommandCobrar(caja, 80.0));
+        control.presionarBoton();
+        //Realizar efectivo
+        caja.setEstrategia(new PagoEfectivo());
+        control.setComando(new CommandCobrar(caja, 35.0));
+        control.presionarBoton();
+        //Pago yape
+        caja.setEstrategia(new PagoYape("842"));
+        control.setComando(new CommandCobrar(caja, 45.0));
+        control.presionarBoton();
+        //Salir
+        control.setComando(new CommandSalir(caja));
+        control.presionarBoton();
+	}
+}
+
+-------------EJERCICIOS--------------------
+Java — Código Fuente
+package Ejercicio1;
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main {
+
+    private static List<Usuario> usuarios = new ArrayList<>();
+    private static SistemaNotificaciones sistema = new SistemaNotificaciones();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        int opcion;
+
+        do {
+            mostrarMenu();
+            opcion = leerEntero();
+
+            switch (opcion) {
+                case 1:
+                    registrarUsuario();
+                    break;
+                case 2:
+                    suscribirUsuario();
+                    break;
+                case 3:
+                    desuscribirUsuario();
+                    break;
+                case 4:
+                    enviarNotificacion();
+                    break;
+                case 5:
+                    listarUsuarios();
+                    break;
+                case 6:
+                    verHistorial();
+                    break;
+                case 0:
+                    System.out.println("Saliendo del sistema...");
+                    break;
+                default:
+                    System.out.println("Opción no válida.");
+            }
+        } while (opcion != 0);
+    }
+
+    private static void mostrarMenu() {
+        System.out.println("\n===== SISTEMA DE NOTIFICACIONES =====");
+        System.out.println("1. Registrar usuario");
+        System.out.println("2. Suscribir usuario");
+        System.out.println("3. Desuscribir usuario");
+        System.out.println("4. Enviar notificación");
+        System.out.println("5. Listar usuarios y suscripciones");
+        System.out.println("6. Ver historial de un usuario");
+        System.out.println("0. Salir");
+        System.out.print("Elija una opción: ");
+    }
+
+    private static void registrarUsuario() {
+        System.out.print("Nombre del usuario: ");
+        String nombre = scanner.nextLine().trim();
+
+        if (nombre.isEmpty()) {
+            System.out.println("El nombre no puede estar vacío.");
+        } else if (buscarUsuario(nombre) != null) {
+            System.out.println("Ya existe un usuario con ese nombre.");
+        } else {
+            usuarios.add(new Usuario(nombre));
+            System.out.println("Usuario registrado: " + nombre);
+        }
+    }
+
+    private static void suscribirUsuario() {
+        Usuario usuario = pedirUsuario();
+        if (usuario == null) {
+            return;
+        }
+        if (sistema.estaSuscrito(usuario)) {
+            System.out.println(usuario.getNombre() + " ya está suscrito.");
+        } else {
+            sistema.attach(usuario);
+            System.out.println(usuario.getNombre() + " se suscribió correctamente.");
+        }
+    }
+
+    private static void desuscribirUsuario() {
+        Usuario usuario = pedirUsuario();
+        if (usuario == null) {
+            return;
+        }
+        if (!sistema.estaSuscrito(usuario)) {
+            System.out.println(usuario.getNombre() + " no está suscrito.");
+        } else {
+            sistema.detach(usuario);
+            System.out.println(usuario.getNombre() + " se desuscribió correctamente.");
+        }
+    }
+
+    private static void enviarNotificacion() {
+        if (sistema.cantidadSuscriptores() == 0) {
+            System.out.println("No hay usuarios suscritos.");
+            return;
+        }
+
+        System.out.println("Tipo de notificación: 1. Promoción  2. Actualización de producto");
+        System.out.print("Elija el tipo: ");
+        int tipo = leerEntero();
+
+        String nombreTipo;
+        if (tipo == 1) {
+            nombreTipo = "Promoción";
+        } else if (tipo == 2) {
+            nombreTipo = "Actualización";
+        } else {
+            System.out.println("Tipo no válido.");
+            return;
+        }
+
+        System.out.print("Mensaje: ");
+        String mensaje = scanner.nextLine().trim();
+
+        if (mensaje.isEmpty()) {
+            System.out.println("El mensaje no puede estar vacío.");
+            return;
+        }
+
+        System.out.println("\nEnviando notificación...");
+        sistema.notifyObservers(new Notificacion(nombreTipo, mensaje));
+    }
+
+    private static void listarUsuarios() {
+        if (usuarios.isEmpty()) {
+            System.out.println("No hay usuarios registrados.");
+            return;
+        }
+        System.out.println("\nUsuarios registrados:");
+        for (Usuario u : usuarios) {
+            String estado = sistema.estaSuscrito(u) ? "Suscrito" : "No suscrito";
+            System.out.println("- " + u.getNombre() + " (" + estado + ")");
+        }
+    }
+
+    private static void verHistorial() {
+        Usuario usuario = pedirUsuario();
+        if (usuario == null) {
+            return;
+        }
+        if (usuario.getHistorial().isEmpty()) {
+            System.out.println(usuario.getNombre() + " no ha recibido notificaciones.");
+            return;
+        }
+        System.out.println("Historial de " + usuario.getNombre() + ":");
+        for (Notificacion n : usuario.getHistorial()) {
+            System.out.println("- " + n);
+        }
+    }
+
+    private static Usuario pedirUsuario() {
+        System.out.print("Nombre del usuario: ");
+        String nombre = scanner.nextLine().trim();
+        Usuario usuario = buscarUsuario(nombre);
+        if (usuario == null) {
+            System.out.println("El usuario no está registrado.");
+        }
+        return usuario;
+    }
+
+    private static Usuario buscarUsuario(String nombre) {
+        for (Usuario u : usuarios) {
+            if (u.getNombre().equalsIgnoreCase(nombre)) {
+                return u;
+            }
+        }
+        return null;
+    }
+
+    private static int leerEntero() {
+        try {
+            return Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio1;
+
+class Notificacion {
+    private String tipo;     
+    private String mensaje;
+
+    public Notificacion(String tipo, String mensaje) {
+        this.tipo = tipo;
+        this.mensaje = mensaje;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public String getMensaje() {
+        return mensaje;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + tipo + "] " + mensaje;
+    }
+}
+
+Java — Código Fuente
+package Ejercicio1;
+
+interface Observer {
+    void update(Notificacion notificacion);
+}
+
+Java — Código Fuente
+package Ejercicio1;
+import java.util.ArrayList;
+import java.util.List;
+
+class SistemaNotificaciones {
+    private List<Observer> suscriptores = new ArrayList<>();
+
+    public void attach(Observer observer) {
+        if (!suscriptores.contains(observer)) {
+            suscriptores.add(observer);
+        }
+    }
+
+    public void detach(Observer observer) {
+        suscriptores.remove(observer);
+    }
+
+    public boolean estaSuscrito(Observer observer) {
+        return suscriptores.contains(observer);
+    }
+
+    public int cantidadSuscriptores() {
+        return suscriptores.size();
+    }
+
+    public void notifyObservers(Notificacion notificacion) {
+        for (Observer observer : suscriptores) {
+            observer.update(notificacion);
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio1;
+import java.util.ArrayList;
+import java.util.List;
+
+class Usuario implements Observer {
+    private String nombre;
+    private List<Notificacion> historial = new ArrayList<>();
+
+    public Usuario(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public List<Notificacion> getHistorial() {
+        return historial;
+    }
+
+    @Override
+    public void update(Notificacion notificacion) {
+        historial.add(notificacion);
+        System.out.println(nombre + " recibió: " + notificacion);
+    }
+}
+-----------------------------2----------------
+Java — Código Fuente
+package Ejercicio2;
+import java.util.List;
+
+class CalculadoraDePrecios {
+    private EstrategiaDescuento estrategia = new SinDescuento();
+
+    public void setEstrategia(EstrategiaDescuento estrategia) {
+        this.estrategia = estrategia;
+    }
+
+    public EstrategiaDescuento getEstrategia() {
+        return estrategia;
+    }
+
+    public double calcularSubtotal(List<Producto> productos) {
+        return Utilidades.sumar(productos);
+    }
+
+    public double calcularPrecioFinal(List<Producto> productos) {
+        return estrategia.calcularTotal(productos);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+import java.util.List;
+
+class DescuentoFijo implements EstrategiaDescuento {
+    public double calcularTotal(List<Producto> productos) {
+        return Utilidades.sumar(productos) * 0.90;
+    }
+
+    public String getNombre() {
+        return "Descuento fijo (10%)";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+class DescuentoPorcentual implements EstrategiaDescuento {
+    public double calcularTotal(List<Producto> productos) {
+        double total = Utilidades.sumar(productos);
+
+        Map<String, List<Producto>> grupos = new LinkedHashMap<>();
+        for (Producto p : productos) {
+            String clave = p.getNombre().toLowerCase() + "|" + p.getPrecio();
+            grupos.computeIfAbsent(clave, k -> new ArrayList<>()).add(p);
+        }
+
+        for (List<Producto> grupo : grupos.values()) {
+            int parejas = grupo.size() / 2;
+            double precio = grupo.get(0).getPrecio();
+            total -= parejas * 2 * precio * 0.30;
+        }
+        return total;
+    }
+
+    public String getNombre() {
+        return "Descuento porcentual (2 productos iguales: 30%)";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+import java.util.List;
+
+class DescuentoPorcentualAcumulado implements EstrategiaDescuento {
+    public double calcularTotal(List<Producto> productos) {
+        double total = Utilidades.sumar(productos);
+
+        if (productos.size() >= 3) {
+            double menorPrecio = productos.get(0).getPrecio();
+            for (Producto p : productos) {
+                if (p.getPrecio() < menorPrecio) {
+                    menorPrecio = p.getPrecio();
+                }
+            }
+            total -= menorPrecio * 0.50;
+        }
+        return total;
+    }
+
+    public String getNombre() {
+        return "Descuento porcentual acumulado (3 o más: 50% al más barato)";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+import java.util.List;
+
+interface EstrategiaDescuento {
+    double calcularTotal(List<Producto> productos);
+
+    String getNombre();
+}
+
+Java — Código Fuente
+package Ejercicio2;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+
+    private static List<Producto> carrito = new ArrayList<>();
+    private static CalculadoraDePrecios calculadora = new CalculadoraDePrecios();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        int opcion;
+
+        do {
+            mostrarMenu();
+            opcion = leerEntero();
+
+            switch (opcion) {
+                case 1:
+                    agregarProducto();
+                    break;
+                case 2:
+                    verCarrito();
+                    break;
+                case 3:
+                    elegirEstrategia();
+                    break;
+                case 4:
+                    calcularTotal();
+                    break;
+                case 5:
+                    carrito.clear();
+                    System.out.println("Carrito vaciado.");
+                    break;
+                case 0:
+                    System.out.println("Saliendo del sistema...");
+                    break;
+                default:
+                    System.out.println("Opción no válida.");
+            }
+        } while (opcion != 0);
+    }
+
+    private static void mostrarMenu() {
+        System.out.println("\n===== CALCULADORA DE PRECIOS =====");
+        System.out.println("Estrategia actual: " + calculadora.getEstrategia().getNombre());
+        System.out.println("1. Agregar producto al carrito");
+        System.out.println("2. Ver carrito");
+        System.out.println("3. Elegir estrategia de descuento");
+        System.out.println("4. Calcular precio final");
+        System.out.println("5. Vaciar carrito");
+        System.out.println("0. Salir");
+        System.out.print("Elija una opción: ");
+    }
+
+    private static void agregarProducto() {
+        System.out.print("Nombre del producto: ");
+        String nombre = scanner.nextLine().trim();
+
+        if (nombre.isEmpty()) {
+            System.out.println("El nombre no puede estar vacío.");
+            return;
+        }
+
+        System.out.print("Precio: ");
+        try {
+            double precio = Double.parseDouble(scanner.nextLine().trim().replace(',', '.'));
+            if (precio <= 0) {
+                System.out.println("El precio debe ser mayor que 0.");
+                return;
+            }
+            carrito.add(new Producto(nombre, precio));
+            System.out.println("Producto agregado: " + nombre);
+        } catch (NumberFormatException e) {
+            System.out.println("Precio no válido.");
+        }
+    }
+
+    private static void verCarrito() {
+        if (carrito.isEmpty()) {
+            System.out.println("El carrito está vacío.");
+            return;
+        }
+        System.out.println("\nProductos en el carrito:");
+        int i = 1;
+        for (Producto p : carrito) {
+            System.out.println(i + ". " + p);
+            i++;
+        }
+    }
+
+    private static void elegirEstrategia() {
+        System.out.println("\nEstrategias disponibles:");
+        System.out.println("1. Sin descuento");
+        System.out.println("2. Descuento fijo (10%)");
+        System.out.println("3. Descuento porcentual (2 productos iguales: 30%)");
+        System.out.println("4. Descuento porcentual acumulado (3 o más: 50% al más barato)");
+        System.out.print("Elija la estrategia: ");
+
+        switch (leerEntero()) {
+            case 1:
+                calculadora.setEstrategia(new SinDescuento());
+                break;
+            case 2:
+                calculadora.setEstrategia(new DescuentoFijo());
+                break;
+            case 3:
+                calculadora.setEstrategia(new DescuentoPorcentual());
+                break;
+            case 4:
+                calculadora.setEstrategia(new DescuentoPorcentualAcumulado());
+                break;
+            default:
+                System.out.println("Estrategia no válida.");
+                return;
+        }
+        System.out.println("Estrategia seleccionada: " + calculadora.getEstrategia().getNombre());
+    }
+
+    private static void calcularTotal() {
+        if (carrito.isEmpty()) {
+            System.out.println("El carrito está vacío.");
+            return;
+        }
+
+        double subtotal = calculadora.calcularSubtotal(carrito);
+        double total = calculadora.calcularPrecioFinal(carrito);
+
+        System.out.println("\nEstrategia: " + calculadora.getEstrategia().getNombre());
+        System.out.println("Subtotal:   S/ " + String.format("%.2f", subtotal));
+        System.out.println("Descuento:  S/ " + String.format("%.2f", subtotal - total));
+        System.out.println("Total:      S/ " + String.format("%.2f", total));
+    }
+
+    private static int leerEntero() {
+        try {
+            return Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+
+
+class Producto {
+    private String nombre;
+    private double precio;
+
+    public Producto(String nombre, double precio) {
+        this.nombre = nombre;
+        this.precio = precio;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public double getPrecio() {
+        return precio;
+    }
+
+    @Override
+    public String toString() {
+        return nombre + " - S/ " + String.format("%.2f", precio);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+import java.util.List;
+
+class SinDescuento implements EstrategiaDescuento {
+    public double calcularTotal(List<Producto> productos) {
+        return Utilidades.sumar(productos);
+    }
+
+    public String getNombre() {
+        return "Sin descuento";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio2;
+import java.util.List;
+
+class Utilidades {
+    public static double sumar(List<Producto> productos) {
+        double suma = 0;
+        for (Producto p : productos) {
+            suma += p.getPrecio();
+        }
+        return suma;
+    }
+}
+
+------------3APP APLICANDO LO APRENDIDO-------------------
+
+Java — Código Fuente
+package Ejercicio3;
+
+
+class AppMovil implements Observer {
+    public void update(String evento) {
+        System.out.println("[APP MÓVIL] Notificación: " + evento);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class BajarVolumenCommand implements Command {
+    private Televisor tv;
+    private int volumenPrevio;
+
+    public BajarVolumenCommand(Televisor tv) {
+        this.tv = tv;
+    }
+
+    public boolean execute() {
+        volumenPrevio = tv.getVolumen();
+        return tv.bajarVolumen();
+    }
+
+    public void undo() {
+        tv.setVolumen(volumenPrevio);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class CanalAnteriorCommand implements Command {
+    private Televisor tv;
+    private int canalPrevio;
+
+    public CanalAnteriorCommand(Televisor tv) {
+        this.tv = tv;
+    }
+
+    public boolean execute() {
+        canalPrevio = tv.getCanal();
+        return tv.canalAnterior();
+    }
+
+    public void undo() {
+        tv.setCanal(canalPrevio);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class CanalSiguienteCommand implements Command {
+    private Televisor tv;
+    private int canalPrevio;
+
+    public CanalSiguienteCommand(Televisor tv) {
+        this.tv = tv;
+    }
+
+    public boolean execute() {
+        canalPrevio = tv.getCanal();
+        return tv.canalSiguiente();
+    }
+
+    public void undo() {
+        tv.setCanal(canalPrevio);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+interface Command {
+    boolean execute();
+
+    void undo();
+}
+
+Java — Código Fuente
+package Ejercicio3;
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+
+class ControlRemoto {
+    private Command command;
+    private Deque<Command> historial = new ArrayDeque<>();
+
+    public void setCommand(Command command) {
+        this.command = command;
+    }
+
+    public void pressButton() {
+        if (command.execute()) {
+            historial.push(command);
+        }
+    }
+
+    public void deshacer() {
+        if (historial.isEmpty()) {
+            System.out.println("No hay acciones para deshacer.");
+        } else {
+            System.out.println("Deshaciendo la última acción...");
+            historial.pop().undo();
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class EncenderApagarCommand implements Command {
+    private Televisor tv;
+    private boolean estadoPrevio;
+
+    public EncenderApagarCommand(Televisor tv) {
+        this.tv = tv;
+    }
+
+    public boolean execute() {
+        estadoPrevio = tv.isEncendido();
+        tv.alternarEncendido();
+        return true;
+    }
+
+    public void undo() {
+        tv.setEncendido(estadoPrevio);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+interface EstrategiaCanal {
+    int siguiente(int actual);
+
+    int anterior(int actual);
+
+    String getNombre();
+}
+
+Java — Código Fuente
+package Ejercicio3;
+import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        Televisor tv = new Televisor();
+        PantallaTV pantalla = new PantallaTV();
+        AppMovil app = new AppMovil();
+        RegistroActividad registro = new RegistroActividad();
+        tv.attach(pantalla);
+        tv.attach(registro);
+
+        Command encenderApagar = new EncenderApagarCommand(tv);
+        Command subirVolumen = new SubirVolumenCommand(tv);
+        Command bajarVolumen = new BajarVolumenCommand(tv);
+        Command canalSiguiente = new CanalSiguienteCommand(tv);
+        Command canalAnterior = new CanalAnteriorCommand(tv);
+
+        ControlRemoto remoto = new ControlRemoto();
+
+        int opcion;
+        do {
+            mostrarMenu(tv, app);
+            opcion = leerEntero(scanner);
+            System.out.println();
+
+            switch (opcion) {
+                case 1:
+                    remoto.setCommand(encenderApagar);
+                    remoto.pressButton();
+                    break;
+                case 2:
+                    remoto.setCommand(subirVolumen);
+                    remoto.pressButton();
+                    break;
+                case 3:
+                    remoto.setCommand(bajarVolumen);
+                    remoto.pressButton();
+                    break;
+                case 4:
+                    remoto.setCommand(canalSiguiente);
+                    remoto.pressButton();
+                    break;
+                case 5:
+                    remoto.setCommand(canalAnterior);
+                    remoto.pressButton();
+                    break;
+                case 6:
+                    remoto.deshacer();
+                    break;
+                case 7:
+                    cambiarNavegacion(tv, scanner);
+                    break;
+                case 8:
+                    if (tv.estaConectado(app)) {
+                        tv.detach(app);
+                        System.out.println("App móvil desconectada.");
+                    } else {
+                        tv.attach(app);
+                        System.out.println("App móvil conectada.");
+                    }
+                    break;
+                case 9:
+                    registro.mostrar();
+                    break;
+                case 0:
+                    System.out.println("Saliendo del sistema...");
+                    break;
+                default:
+                    System.out.println("Opción no válida.");
+            }
+        } while (opcion != 0);
+    }
+
+    private static void mostrarMenu(Televisor tv, AppMovil app) {
+        System.out.println("\n===== CONTROL REMOTO SMART TV =====");
+        System.out.println("Estado: " + (tv.isEncendido() ? "ENCENDIDO" : "APAGADO")
+                + " | Canal: " + tv.getCanal()
+                + " | Volumen: " + tv.getVolumen());
+        System.out.println("Navegación: " + tv.getEstrategiaCanal().getNombre());
+        System.out.println("App móvil: " + (tv.estaConectado(app) ? "conectada" : "desconectada"));
+        System.out.println("-----------------------------------");
+        System.out.println("1. Encender / Apagar");
+        System.out.println("2. Subir volumen");
+        System.out.println("3. Bajar volumen");
+        System.out.println("4. Canal siguiente");
+        System.out.println("5. Canal anterior");
+        System.out.println("6. Deshacer última acción");
+        System.out.println("7. Cambiar navegación de canales");
+        System.out.println("8. Conectar / Desconectar app móvil");
+        System.out.println("9. Ver registro de actividad");
+        System.out.println("0. Salir");
+        System.out.print("Elija una opción: ");
+    }
+
+    private static void cambiarNavegacion(Televisor tv, Scanner scanner) {
+        System.out.println("1. Secuencial (canales 1 al 20)");
+        System.out.println("2. Favoritos (2, 5, 9, 13, 18)");
+        System.out.print("Elija la navegación: ");
+
+        switch (leerEntero(scanner)) {
+            case 1:
+                tv.setEstrategiaCanal(new NavegacionSecuencial());
+                break;
+            case 2:
+                tv.setEstrategiaCanal(new NavegacionFavoritos());
+                break;
+            default:
+                System.out.println("Opción no válida.");
+        }
+    }
+
+    private static int leerEntero(Scanner scanner) {
+        try {
+            return Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class NavegacionFavoritos implements EstrategiaCanal {
+    private int[] favoritos = {2, 5, 9, 13, 18};
+
+    public int siguiente(int actual) {
+        for (int canal : favoritos) {
+            if (canal > actual) {
+                return canal;
+            }
+        }
+        return favoritos[0]; 
+    }
+
+    public int anterior(int actual) {
+        for (int i = favoritos.length - 1; i >= 0; i--) {
+            if (favoritos[i] < actual) {
+                return favoritos[i];
+            }
+        }
+        return favoritos[favoritos.length - 1]; 
+    }
+
+    public String getNombre() {
+        return "Favoritos (2, 5, 9, 13, 18)";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class NavegacionSecuencial implements EstrategiaCanal {
+    private static final int TOTAL_CANALES = 20;
+
+    public int siguiente(int actual) {
+        return (actual >= TOTAL_CANALES) ? 1 : actual + 1;
+    }
+
+    public int anterior(int actual) {
+        return (actual <= 1) ? TOTAL_CANALES : actual - 1;
+    }
+
+    public String getNombre() {
+        return "Secuencial (canales 1 al 20)";
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+interface Observer {
+    void update(String evento);
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class PantallaTV implements Observer {
+    public void update(String evento) {
+        System.out.println("[PANTALLA] " + evento);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+import java.util.ArrayList;
+import java.util.List;
+
+class RegistroActividad implements Observer {
+    private List<String> eventos = new ArrayList<>();
+
+    public void update(String evento) {
+        eventos.add(evento);
+    }
+
+    public void mostrar() {
+        if (eventos.isEmpty()) {
+            System.out.println("No hay actividad registrada.");
+            return;
+        }
+        System.out.println("\nRegistro de actividad:");
+        int i = 1;
+        for (String e : eventos) {
+            System.out.println(i + ". " + e);
+            i++;
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class SubirVolumenCommand implements Command {
+    private Televisor tv;
+    private int volumenPrevio;
+
+    public SubirVolumenCommand(Televisor tv) {
+        this.tv = tv;
+    }
+
+    public boolean execute() {
+        volumenPrevio = tv.getVolumen();
+        return tv.subirVolumen();
+    }
+
+    public void undo() {
+        tv.setVolumen(volumenPrevio);
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+import java.util.ArrayList;
+import java.util.List;
+
+class Subject {
+    private List<Observer> observers = new ArrayList<>();
+
+    public void attach(Observer observer) {
+        if (!observers.contains(observer)) {
+            observers.add(observer);
+        }
+    }
+
+    public void detach(Observer observer) {
+        observers.remove(observer);
+    }
+
+    public boolean estaConectado(Observer observer) {
+        return observers.contains(observer);
+    }
+
+    public void notifyObservers(String evento) {
+        for (Observer observer : observers) {
+            observer.update(evento);
+        }
+    }
+}
+
+Java — Código Fuente
+package Ejercicio3;
+
+class Televisor extends Subject {
+    private boolean encendido = false;
+    private int volumen = 10;
+    private int canal = 1;
+    private EstrategiaCanal estrategiaCanal = new NavegacionSecuencial();
+
+    public boolean isEncendido() {
+        return encendido;
+    }
+
+    public int getVolumen() {
+        return volumen;
+    }
+
+    public int getCanal() {
+        return canal;
+    }
+
+    public EstrategiaCanal getEstrategiaCanal() {
+        return estrategiaCanal;
+    }
+
+    public void setEstrategiaCanal(EstrategiaCanal estrategia) {
+        this.estrategiaCanal = estrategia;
+        notifyObservers("Navegación de canales: " + estrategia.getNombre());
+    }
+
+    public void setEncendido(boolean encendido) {
+        this.encendido = encendido;
+        notifyObservers(encendido ? "Televisor encendido" : "Televisor apagado");
+    }
+
+    public void alternarEncendido() {
+        setEncendido(!encendido);
+    }
+
+    public void setVolumen(int volumen) {
+        this.volumen = volumen;
+        notifyObservers("Volumen: " + volumen);
+    }
+
+    public void setCanal(int canal) {
+        this.canal = canal;
+        notifyObservers("Canal: " + canal);
+    }
+
+    public boolean subirVolumen() {
+        if (!verificarEncendido()) {
+            return false;
+        }
+        if (volumen >= 100) {
+            notifyObservers("El volumen ya está al máximo");
+            return false;
+        }
+        setVolumen(volumen + 5);
+        return true;
+    }
+
+    public boolean bajarVolumen() {
+        if (!verificarEncendido()) {
+            return false;
+        }
+        if (volumen <= 0) {
+            notifyObservers("El volumen ya está al mínimo");
+            return false;
+        }
+        setVolumen(volumen - 5);
+        return true;
+    }
+
+    public boolean canalSiguiente() {
+        if (!verificarEncendido()) {
+            return false;
+        }
+        setCanal(estrategiaCanal.siguiente(canal));
+        return true;
+    }
+
+    public boolean canalAnterior() {
+        if (!verificarEncendido()) {
+            return false;
+        }
+        setCanal(estrategiaCanal.anterior(canal));
+        return true;
+    }
+
+    private boolean verificarEncendido() {
+        if (!encendido) {
+            notifyObservers("Acción ignorada: el televisor está apagado");
+        }
+        return encendido;
+    }
+}
+
+
+
